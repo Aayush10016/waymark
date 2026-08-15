@@ -1,0 +1,74 @@
+name: quality
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: format-lint-test-contract-build-security
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    permissions:
+      contents: read
+      pull-requests: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Set up Java
+        uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
+        with:
+          distribution: temurin
+          java-version: 17.0.19+10
+          cache: maven
+
+      - name: Set up Node
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: 24.18.0
+          cache: pnpm
+
+      - name: Enable pinned pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.10.0 --activate
+          pnpm --version
+
+      - name: Install TypeScript workspace
+        run: pnpm install --frozen-lockfile
+
+      - name: Check formatting
+        run: pnpm ci:format
+
+      - name: Scan for secrets
+        run: pnpm ci:secrets
+
+      - name: Review dependency changes
+        if: github.event_name == 'pull_request'
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          fail-on-severity: high
+          comment-summary-in-pr: never
+
+      - name: Check dependency health
+        run: pnpm ci:dependencies
+
+      - name: Verify TypeScript workspace and OpenAPI contract
+        run: pnpm verify
+
+      - name: Verify Java backend
+        run: ./mvnw verify
+

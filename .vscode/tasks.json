@@ -1,0 +1,21 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Waymark: Build VS Code Extension",
+      "type": "shell",
+      "command": "corepack",
+      "args": [
+        "pnpm",
+        "--filter",
+        "./apps/vscode-extension",
+        "build"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "build",
+      "problemMatcher": "$tsc"
+    }
+  ]
+}

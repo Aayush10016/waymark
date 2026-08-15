@@ -1,0 +1,339 @@
+{
+  "corpusVersion": 1,
+  "policyVersion": "url-query-sanitation-v1",
+  "description": "Synthetic language-neutral URL/query sanitation fixtures for Trail v1.1.",
+  "searchAllowlist": [
+    {
+      "engine": "google",
+      "hosts": ["google.com", "www.google.com"],
+      "pathPrefixes": ["/search"],
+      "queryParameters": ["q"]
+    },
+    {
+      "engine": "bing",
+      "hosts": ["bing.com", "www.bing.com"],
+      "pathPrefixes": ["/search"],
+      "queryParameters": ["q"]
+    },
+    {
+      "engine": "duckduckgo",
+      "hosts": ["duckduckgo.com", "www.duckduckgo.com"],
+      "pathPrefixes": ["/"],
+      "queryParameters": ["q"]
+    },
+    {
+      "engine": "stackoverflow",
+      "hosts": ["stackoverflow.com"],
+      "pathPrefixes": ["/search"],
+      "queryParameters": ["q"]
+    },
+    {
+      "engine": "github",
+      "hosts": ["github.com"],
+      "pathPrefixes": ["/search"],
+      "queryParameters": ["q"]
+    }
+  ],
+  "cases": [
+    {
+      "id": "scheme-https-allowed",
+      "categories": ["schemes"],
+      "input": {
+        "url": "https://docs.spring.io/spring-security/reference/servlet/integrations/cors.html#configuration",
+        "title": "CORS :: Spring Security"
+      },
+      "expected": {
+        "decision": "allow",
+        "canonicalUrl": "https://docs.spring.io/spring-security/reference/servlet/integrations/cors.html",
+        "hostname": "docs.spring.io",
+        "searchQuery": null,
+        "removedQueryParameters": [],
+        "policyVersion": "url-query-sanitation-v1"
+      }
+    },
+    {
+      "id": "scheme-http-allowed",
+      "categories": ["schemes"],
+      "input": {
+        "url": "http://example.test/docs/cors?utm_source=newsletter",
+        "title": "Synthetic CORS docs"
+      },
+      "expected": {
+        "decision": "allow",
+        "canonicalUrl": "http://example.test/docs/cors",
+        "hostname": "example.test",
+        "searchQuery": null,
+        "removedQueryParameters": ["utm_source"],
+        "policyVersion": "url-query-sanitation-v1"
+      }
+    },
+    {
+      "id": "scheme-file-rejected",
+      "categories": ["schemes"],
+      "input": {
+        "url": "file:///Users/example/project/.env",
+        "title": "Local file"
+      },
+      "expected": {
+        "decision": "reject",
+        "rejectionReason": "unsupported_scheme",
+        "policyVersion": "url-query-sanitation-v1"
+      }
+    },
+    {
+      "id": "scheme-chrome-rejected",
+      "categories": ["schemes"],
+      "input": {
+        "url": "chrome://extensions/",
+        "title": "Extensions"
+      },
+      "expected": {
+        "decision": "reject",
+        "rejectionReason": "unsupported_scheme",
+        "policyVersion": "url-query-sanitation-v1"
+      }
+    },
+    {
+      "id": "scheme-javascript-rejected",
+      "categories": ["schemes"],
+      "input": {
+        "url": "javascript:alert('fixture')",
+        "title": "Script URL"
+      },
+      "expected": {
+        "decision": "reject",
+        "rejectionReason": "unsupported_scheme",
+        "policyVersion": "url-query-sanitation-v1"
+      }
+    },
+    {
+      "id": "credentials-basic-auth-rejected",
+      "categories": ["credentials"],
+      "input": {
+        "url": "https://fixture-user:fixture-pass@example.test/private/docs",
+        "title": "Credential URL"
+      },
+      "expected": {
+        "decision": "reject",
+        "rejectionReason": "credentials_present",
+        "policyVersion": "url-query-sanitation-v1"
+      }
+    },
+    {
+      "id": "host-localhost-rejected",
+      "categories": ["private-hosts"],
+      "input": {
+        "url": "http://localhost:3000/debug/cors",
+        "title": "Local app"
+      },
+      "expected": {
+        "decision": "reject",
+        "rejectionReason": "private_or_local_host",
+        "policyVersion": "url-query-sanitation-v1"
+      }
+    },
+    {
+      "id": "host-loopback-ipv4-rejected",
+      "categories": ["private-hosts", "ip"],
+      "input": {
+        "url": "http://127.0.0.1:8080/actuator",
+        "title": "Loopback service"
+      },
+      "expected": {
+        "decision": "reject",
+        "rejectionReason": "private_or_local_host",
+        "policyVersion": "url-query-sanitation-v1"
+      }
+    },
+    {
+      "id": "host-private-ipv4-rejected",
+      "categories": ["private-hosts", "ip"],
+      "input": {
+        "url": "http://192.168.1.20:8080/admin",
+        "title": "Private router"
+      },
+      "expected": {
+        "decision": "reject",
+        "rejectionReason": "private_or_local_host",
+        "policyVersion": "url-query-sanitation-v1"
+      }
+    },
+    {
+      "id": "host-unique-local-ipv6-rejected",
+      "categories": ["private-hosts", "ip"],
+      "input": {
+        "url": "http://[fc00::1]/service",
+        "title": "IPv6 local service"
+      },
+      "expected": {
+        "decision": "reject",
+        "rejectionReason": "private_or_local_host",
+        "policyVersion": "url-query-sanitation-v1"
+      }
+    },
+    {
+      "id": "host-public-ipv4-allowed",
+      "categories": ["ip"],
+      "input": {
+        "url": "https://93.184.216.34/docs?utm_medium=email",
+        "title": "Public IP docs"
+      },
+      "expected": {
+        "decision": "allow",
+        "canonicalUrl": "https://93.184.216.34/docs",
+        "hostname": "93.184.216.34",
+        "searchQuery": null,
+        "removedQueryParameters": ["utm_medium"],
+        "policyVersion": "url-query-sanitation-v1"
+      }
+    },
+    {
+      "id": "host-idn-punycode-allowed",
+      "categories": ["idn"],
+      "input": {
+        "url": "https://mañana.example/docs/cors?utm_campaign=fixture",
+        "title": "Internationalized docs"
+      },
+      "expected": {
+        "decision": "allow",
+        "canonicalUrl": "https://xn--maana-pta.example/docs/cors",
+        "hostname": "xn--maana-pta.example",
+        "searchQuery": null,
+        "removedQueryParameters": ["utm_campaign"],
+        "policyVersion": "url-query-sanitation-v1"
+      }
+    },
+    {
+      "id": "trackers-multiple-removed",
+      "categories": ["trackers"],
+      "input": {
+        "url": "https://stackoverflow.com/questions/12345/cors-error?utm_source=feed&utm_medium=email&fbclid=fixture-click&id=12345",
+        "title": "CORS error - Stack Overflow"
+      },
+      "expected": {
+        "decision": "allow",
+        "canonicalUrl": "https://stackoverflow.com/questions/12345/cors-error?id=12345",
+        "hostname": "stackoverflow.com",
+        "searchQuery": null,
+        "removedQueryParameters": ["utm_source", "utm_medium", "fbclid"],
+        "policyVersion": "url-query-sanitation-v1"
+      }
+    },
+    {
+      "id": "secrets-query-removed",
+      "categories": ["secrets"],
+      "input": {
+        "url": "https://example.test/docs?access_token=fixture-access-token&api_key=fixture-api-key&password=fixture-password&topic=cors",
+        "title": "Docs with secret-like parameters"
+      },
+      "expected": {
+        "decision": "allow",
+        "canonicalUrl": "https://example.test/docs?topic=cors",
+        "hostname": "example.test",
+        "searchQuery": null,
+        "removedQueryParameters": ["access_token", "api_key", "password"],
+        "policyVersion": "url-query-sanitation-v1"
+      }
+    },
+    {
+      "id": "secrets-oauth-code-removed",
+      "categories": ["secrets"],
+      "input": {
+        "url": "https://example.test/callback?code=fixture-code&state=fixture-state&error=access_denied",
+        "title": "Synthetic OAuth callback"
+      },
+      "expected": {
+        "decision": "allow",
+        "canonicalUrl": "https://example.test/callback?error=access_denied",
+        "hostname": "example.test",
+        "searchQuery": null,
+        "removedQueryParameters": ["code", "state"],
+        "policyVersion": "url-query-sanitation-v1"
+      }
+    },
+    {
+      "id": "search-google-allowlisted-query-extracted",
+      "categories": ["search-allowlist"],
+      "input": {
+        "url": "https://www.google.com/search?q=Spring%20Security%20CORS%20not%20working&sourceid=chrome&utm_source=fixture",
+        "title": "Spring Security CORS not working - Google Search"
+      },
+      "expected": {
+        "decision": "allow",
+        "canonicalUrl": "https://www.google.com/search?q=Spring%20Security%20CORS%20not%20working",
+        "hostname": "www.google.com",
+        "searchEngine": "google",
+        "searchQuery": "Spring Security CORS not working",
+        "removedQueryParameters": ["sourceid", "utm_source"],
+        "policyVersion": "url-query-sanitation-v1"
+      }
+    },
+    {
+      "id": "search-duckduckgo-allowlisted-query-extracted",
+      "categories": ["search-allowlist"],
+      "input": {
+        "url": "https://duckduckgo.com/?q=pgvector%20cosine%20distance&ia=web",
+        "title": "pgvector cosine distance at DuckDuckGo"
+      },
+      "expected": {
+        "decision": "allow",
+        "canonicalUrl": "https://duckduckgo.com/?q=pgvector%20cosine%20distance",
+        "hostname": "duckduckgo.com",
+        "searchEngine": "duckduckgo",
+        "searchQuery": "pgvector cosine distance",
+        "removedQueryParameters": ["ia"],
+        "policyVersion": "url-query-sanitation-v1"
+      }
+    },
+    {
+      "id": "search-stackoverflow-allowlisted-query-extracted",
+      "categories": ["search-allowlist"],
+      "input": {
+        "url": "https://stackoverflow.com/search?q=java%20jwt%20filter%20order&tab=Relevance",
+        "title": "Search Results - Stack Overflow"
+      },
+      "expected": {
+        "decision": "allow",
+        "canonicalUrl": "https://stackoverflow.com/search?q=java%20jwt%20filter%20order",
+        "hostname": "stackoverflow.com",
+        "searchEngine": "stackoverflow",
+        "searchQuery": "java jwt filter order",
+        "removedQueryParameters": ["tab"],
+        "policyVersion": "url-query-sanitation-v1"
+      }
+    },
+    {
+      "id": "search-nonallowlisted-query-not-extracted",
+      "categories": ["search-allowlist"],
+      "input": {
+        "url": "https://example.test/search?q=private%20internal%20error",
+        "title": "Internal search"
+      },
+      "expected": {
+        "decision": "allow",
+        "canonicalUrl": "https://example.test/search",
+        "hostname": "example.test",
+        "searchQuery": null,
+        "removedQueryParameters": ["q"],
+        "policyVersion": "url-query-sanitation-v1"
+      }
+    },
+    {
+      "id": "oversize-title-bounded",
+      "categories": ["bounds"],
+      "input": {
+        "url": "https://example.test/docs/cors",
+        "title": "Synthetic title intentionally longer than the capture display budget to verify consumers bound title text before persistence or transport"
+      },
+      "expected": {
+        "decision": "allow",
+        "canonicalUrl": "https://example.test/docs/cors",
+        "hostname": "example.test",
+        "searchQuery": null,
+        "titleMaxLength": 120,
+        "removedQueryParameters": [],
+        "policyVersion": "url-query-sanitation-v1"
+      }
+    }
+  ]
+}

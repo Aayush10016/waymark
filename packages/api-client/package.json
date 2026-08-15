@@ -1,0 +1,16 @@
+{
+  "name": "@trail/api-client",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "generate": "openapi-typescript ../../contracts/openapi/trail-v1.yaml --output src/generated/schema.ts",
+    "lint": "eslint \"src/**/*.ts\"",
+    "typecheck": "tsc --noEmit"
+  }
+}
+

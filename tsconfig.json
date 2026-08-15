@@ -1,0 +1,20 @@
+{
+  "files": [],
+  "references": [
+    {
+      "path": "./apps/extension"
+    },
+    {
+      "path": "./apps/vscode-extension"
+    },
+    {
+      "path": "./packages/api-client"
+    },
+    {
+      "path": "./packages/extension-messages"
+    },
+    {
+      "path": "./packages/ui"
+    }
+  ]
+}

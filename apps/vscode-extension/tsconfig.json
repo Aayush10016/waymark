@@ -1,0 +1,22 @@
+{
+  "extends": "../../packages/tsconfig/base.json",
+  "compilerOptions": {
+    "composite": true,
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "outDir": "dist",
+    "rootDir": ".",
+    "types": [
+      "node",
+      "vscode",
+      "vitest"
+    ],
+    "verbatimModuleSyntax": false
+  },
+  "include": [
+    "src",
+    "tests",
+    "scripts",
+    "vitest.config.ts"
+  ]
+}

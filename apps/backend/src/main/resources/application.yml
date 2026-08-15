@@ -1,0 +1,123 @@
+spring:
+  application:
+    name: trail-backend
+  lifecycle:
+    timeout-per-shutdown-phase: 20s
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
+  flyway:
+    enabled: false
+
+trail:
+  database:
+    url: ${TRAIL_DATABASE_URL:jdbc:postgresql://localhost:5432/trail}
+    username: ${TRAIL_DATABASE_USERNAME:${TRAIL_POSTGRES_USER:trail}}
+    password: ${TRAIL_DATABASE_PASSWORD:${TRAIL_POSTGRES_PASSWORD:trail_local_password}}
+  identity:
+    jwt:
+      key-id: ${TRAIL_JWT_KEY_ID:local}
+      issuer: ${TRAIL_JWT_ISSUER:trail-local}
+      audience: ${TRAIL_JWT_AUDIENCE:trail-extension}
+      public-key-pem: ${TRAIL_JWT_PUBLIC_KEY_PEM:}
+      private-key-pem: ${TRAIL_JWT_PRIVATE_KEY_PEM:}
+      public-key-path: ${TRAIL_JWT_PUBLIC_KEY_PATH:${user.home}/.trail/secrets/jwt-public.pem}
+      private-key-path: ${TRAIL_JWT_PRIVATE_KEY_PATH:${user.home}/.trail/secrets/jwt-private.pem}
+      access-token-time-to-live: ${TRAIL_JWT_ACCESS_TOKEN_TIME_TO_LIVE:10m}
+    lifecycle:
+      refresh-token-time-to-live: ${TRAIL_IDENTITY_REFRESH_TOKEN_TIME_TO_LIVE:30d}
+      email-verification-token-time-to-live: ${TRAIL_IDENTITY_EMAIL_VERIFICATION_TOKEN_TIME_TO_LIVE:24h}
+      password-reset-token-time-to-live: ${TRAIL_IDENTITY_PASSWORD_RESET_TOKEN_TIME_TO_LIVE:1h}
+      verification-destination: ${TRAIL_IDENTITY_VERIFICATION_DESTINATION:http://localhost:8080/verify-email}
+      password-reset-destination: ${TRAIL_IDENTITY_PASSWORD_RESET_DESTINATION:http://localhost:8080/reset-password}
+    email:
+      provider: ${TRAIL_IDENTITY_EMAIL_PROVIDER:local}
+      from-address: ${TRAIL_IDENTITY_EMAIL_FROM_ADDRESS:}
+      from-name: ${TRAIL_IDENTITY_EMAIL_FROM_NAME:Trail}
+      timeout: ${TRAIL_IDENTITY_EMAIL_TIMEOUT:10s}
+      brevo:
+        endpoint: ${TRAIL_IDENTITY_EMAIL_BREVO_ENDPOINT:https://api.brevo.com/v3/smtp/email}
+        api-key: ${TRAIL_IDENTITY_EMAIL_BREVO_API_KEY:}
+  capture:
+    retention:
+      batch-size: ${TRAIL_CAPTURE_RETENTION_BATCH_SIZE:500}
+      max-batches: ${TRAIL_CAPTURE_RETENTION_MAX_BATCHES:20}
+  retrieval:
+    vector-query:
+      timeout: ${TRAIL_RETRIEVAL_VECTOR_QUERY_TIMEOUT:2s}
+  background-jobs:
+    processing:
+      batch-size: ${TRAIL_BACKGROUND_JOBS_BATCH_SIZE:10}
+      max-attempts: ${TRAIL_BACKGROUND_JOBS_MAX_ATTEMPTS:5}
+      lease-duration: ${TRAIL_BACKGROUND_JOBS_LEASE_DURATION:5m}
+      initial-retry-backoff: ${TRAIL_BACKGROUND_JOBS_INITIAL_RETRY_BACKOFF:30s}
+      max-retry-backoff: ${TRAIL_BACKGROUND_JOBS_MAX_RETRY_BACKOFF:30m}
+    scheduler:
+      enabled: ${TRAIL_BACKGROUND_JOBS_SCHEDULER_ENABLED:true}
+      lease-owner: ${TRAIL_BACKGROUND_JOBS_LEASE_OWNER:trail-backend-local}
+      poll-interval-milliseconds: ${TRAIL_BACKGROUND_JOBS_POLL_INTERVAL_MILLISECONDS:30000}
+  ai:
+    provider: ${TRAIL_AI_PROVIDER:mock}
+    enrichment:
+      model: ${TRAIL_AI_ENRICHMENT_MODEL:trail-mock-enrichment}
+      timeout: ${TRAIL_AI_ENRICHMENT_TIMEOUT:30s}
+    openai:
+      responses-endpoint: ${TRAIL_AI_OPENAI_RESPONSES_ENDPOINT:https://api.openai.com/v1/responses}
+      api-key: ${TRAIL_AI_OPENAI_API_KEY:}
+      timeout: ${TRAIL_AI_OPENAI_TIMEOUT:30s}
+      input-cost-per-million-tokens: ${TRAIL_AI_OPENAI_INPUT_COST_PER_MILLION_TOKENS:0}
+      output-cost-per-million-tokens: ${TRAIL_AI_OPENAI_OUTPUT_COST_PER_MILLION_TOKENS:0}
+    embedding:
+      provider: ${TRAIL_EMBEDDING_PROVIDER:mock}
+      solved-session:
+        generation-key: ${TRAIL_EMBEDDING_SOLVED_SESSION_GENERATION_KEY:solved-session}
+        timeout: ${TRAIL_EMBEDDING_SOLVED_SESSION_TIMEOUT:30s}
+      openai:
+        embeddings-endpoint: ${TRAIL_EMBEDDING_OPENAI_EMBEDDINGS_ENDPOINT:https://api.openai.com/v1/embeddings}
+        api-key: ${TRAIL_EMBEDDING_OPENAI_API_KEY:}
+      timeout: ${TRAIL_EMBEDDING_OPENAI_TIMEOUT:30s}
+      input-cost-per-million-tokens: ${TRAIL_EMBEDDING_OPENAI_INPUT_COST_PER_MILLION_TOKENS:0}
+
+logging:
+  structured:
+    format:
+      console: ecs
+
+server:
+  shutdown: graceful
+  error:
+    include-binding-errors: never
+    include-exception: false
+    include-message: never
+    include-stacktrace: never
+
+management:
+  endpoints:
+    web:
+      base-path: /actuator
+      discovery:
+        enabled: false
+      exposure:
+        include: health
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+      group:
+        liveness:
+          include: livenessState
+          show-details: never
+        readiness:
+          include: readinessState
+          show-details: never
+  health:
+    db:
+      enabled: false
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}

@@ -1,0 +1,16 @@
+{
+  "extends": "../../packages/tsconfig/react.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "types": [
+      "chrome",
+      "node",
+      "vite/client"
+    ]
+  },
+  "include": [
+    "src",
+    "tests",
+    "vite.config.ts"
+  ]
+}

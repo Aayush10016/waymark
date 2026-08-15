@@ -1,0 +1,237 @@
+{
+  "name": "waymark",
+  "displayName": "Waymark",
+  "version": "0.1.0",
+  "publisher": "Waymark-Dev",
+  "description": "Keep AI-assisted development aligned with your project's rules and decisions.",
+  "main": "./dist/extension.js",
+  "engines": {
+    "vscode": "^1.125.0"
+  },
+  "categories": [
+    "Linters",
+    "Other"
+  ],
+  "activationEvents": [
+    "onView:trail.projectMemory",
+    "onCommand:trail.openProjectMemory",
+    "onCommand:trail.initializeProject",
+    "onCommand:trail.selectWorkspaceFolder",
+    "onCommand:trail.createConstitution",
+    "onCommand:trail.openConstitution",
+    "onCommand:trail.addRule",
+    "onCommand:trail.deleteRule",
+    "onCommand:trail.addDecision",
+    "onCommand:trail.importArchitectureDocument",
+    "onCommand:trail.showFutureFeature",
+    "onCommand:trail.refreshGitContext",
+    "onCommand:trail.openChangedFile",
+    "onCommand:trail.viewFileDiff",
+    "onCommand:trail.showCommitDetails",
+    "onCommand:trail.searchProjectMemory",
+    "onCommand:trail.refreshProjectMemory",
+    "onCommand:trail.showMemoryResultDetails",
+    "onCommand:trail.explainSelectedCode",
+    "onCommand:trail.showCodeContext",
+    "onCommand:trail.checkSelectedCode",
+    "onCommand:trail.checkCurrentChanges",
+    "onCommand:trail.showGuardianFinding",
+    "onCommand:trail.askAboutSelectedCode",
+    "onCommand:trail.showAiConfiguration"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "trail.openProjectMemory",
+        "title": "Waymark: Open Project Memory"
+      },
+      {
+        "command": "trail.initializeProject",
+        "title": "Waymark: Initialize Project"
+      },
+      {
+        "command": "trail.selectWorkspaceFolder",
+        "title": "Waymark: Select Workspace Folder"
+      },
+      {
+        "command": "trail.createConstitution",
+        "title": "Waymark: Create Constitution"
+      },
+      {
+        "command": "trail.openConstitution",
+        "title": "Waymark: Open Constitution"
+      },
+      {
+        "command": "trail.addRule",
+        "title": "Waymark: Add Rule"
+      },
+      {
+        "command": "trail.deleteRule",
+        "title": "Waymark: Delete Rule"
+      },
+      {
+        "command": "trail.addDecision",
+        "title": "Waymark: Add Decision"
+      },
+      {
+        "command": "trail.importArchitectureDocument",
+        "title": "Waymark: Import Architecture Document"
+      },
+      {
+        "command": "trail.showFutureFeature",
+        "title": "Waymark: Show Future Feature"
+      },
+      {
+        "command": "trail.refreshGitContext",
+        "title": "Waymark: Refresh Git Context"
+      },
+      {
+        "command": "trail.openChangedFile",
+        "title": "Waymark: Open Changed File"
+      },
+      {
+        "command": "trail.viewFileDiff",
+        "title": "Waymark: View File Diff"
+      },
+      {
+        "command": "trail.showCommitDetails",
+        "title": "Waymark: Show Commit Details"
+      },
+      {
+        "command": "trail.searchProjectMemory",
+        "title": "Waymark: Search Project Memory"
+      },
+      {
+        "command": "trail.refreshProjectMemory",
+        "title": "Waymark: Refresh Project Memory"
+      },
+      {
+        "command": "trail.showMemoryResultDetails",
+        "title": "Waymark: Show Memory Result Details"
+      },
+      {
+        "command": "trail.explainSelectedCode",
+        "title": "Waymark: Explain Selected Code"
+      },
+      {
+        "command": "trail.showCodeContext",
+        "title": "Waymark: Show Code Context"
+      },
+      {
+        "command": "trail.checkSelectedCode",
+        "title": "Waymark: Check Against Project Rules"
+      },
+      {
+        "command": "trail.checkCurrentChanges",
+        "title": "Waymark: Check Current Changes"
+      },
+      {
+        "command": "trail.showGuardianFinding",
+        "title": "Waymark: Show Guardian Finding"
+      },
+      {
+        "command": "trail.askAboutSelectedCode",
+        "title": "Waymark: Ask About Selected Code"
+      },
+      {
+        "command": "trail.showAiConfiguration",
+        "title": "Waymark: Show AI Configuration"
+      }
+    ],
+    "submenus": [
+      {
+        "id": "trail.editorContext",
+        "label": "Waymark"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "submenu": "trail.editorContext",
+          "when": "editorHasSelection",
+          "group": "navigation@10"
+        }
+      ],
+      "trail.editorContext": [
+        {
+          "command": "trail.explainSelectedCode",
+          "when": "editorHasSelection",
+          "group": "1_ai@1"
+        },
+        {
+          "command": "trail.askAboutSelectedCode",
+          "when": "editorHasSelection",
+          "group": "1_ai@2"
+        },
+        {
+          "command": "trail.checkSelectedCode",
+          "when": "editorHasSelection",
+          "group": "2_guardian@1"
+        },
+        {
+          "command": "trail.showCodeContext",
+          "when": "editorHasSelection",
+          "group": "3_context@1"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "trail.deleteRule",
+          "when": "view == trail.projectMemory && viewItem == trailRule",
+          "group": "inline@2"
+        }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "trail",
+          "title": "Waymark",
+          "icon": "resources/waymark.svg"
+        }
+      ]
+    },
+    "views": {
+      "trail": [
+        {
+          "id": "trail.projectMemory",
+          "name": "Project Memory"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "build": "node scripts/clean-dist.mjs && tsc -p tsconfig.build.json",
+    "lint": "eslint \"src/**/*.ts\" \"tests/**/*.ts\"",
+    "package:vsix": "pnpm build && vsce package",
+    "test": "vitest run --config vitest.config.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "validate:manifest": "node scripts/validate-manifest.mjs",
+    "verify": "pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm validate:manifest"
+  },
+  "devDependencies": {
+    "@types/vscode": "1.125.0",
+    "@vscode/vsce": "^3.9.2"
+  },
+  "keywords": [
+    "ai",
+    "agent",
+    "code review",
+    "project rules",
+    "architecture decisions",
+    "guardian",
+    "governance",
+    "nvidia"
+  ],
+  "icon": "resources/waymark.png",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Aayush10016/waymark.git",
+    "directory": "apps/vscode-extension"
+  },
+  "bugs": {
+    "url": "https://github.com/Aayush10016/waymark/issues"
+  },
+  "homepage": "https://github.com/Aayush10016/waymark#readme"
+}

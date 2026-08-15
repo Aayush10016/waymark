@@ -1,0 +1,28 @@
+{
+  "name": "@trail/extension",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build && node scripts/copy-manifest.mjs",
+    "lint": "eslint \"src/**/*.{ts,tsx}\" \"tests/**/*.ts\"",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "validate:manifest": "node scripts/validate-manifest.mjs",
+    "webstore:package": "node scripts/package-web-store.mjs",
+    "webstore:validate": "node scripts/validate-web-store-package.mjs"
+  },
+  "dependencies": {
+    "@trail/api-client": "workspace:*",
+    "@trail/extension-messages": "workspace:*",
+    "@trail/ui": "workspace:*",
+    "@vitejs/plugin-react": "6.0.3",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "vite": "8.1.4"
+  },
+  "devDependencies": {
+    "@types/chrome": "0.1.11",
+    "fake-indexeddb": "6.2.5"
+  }
+}

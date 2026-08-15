@@ -1,0 +1,64 @@
+{
+  "version": "similarity-golden-corpus-v1",
+  "precisionGate": 0.9,
+  "query": {
+    "title": "Spring Security CORS not working",
+    "text": "Browser preflight requests from localhost fail when JWT authentication is enabled.",
+    "technologies": ["Spring Security", "JWT"],
+    "errorPhrases": ["CORS"]
+  },
+  "cohorts": {
+    "positive": [
+      {
+        "id": "72000000-0000-4000-8000-000000000001",
+        "title": "Spring Security CORS blocked by JWT filter order",
+        "finalSolution": "Allowed localhost in CorsConfiguration and registered the JWT filter before UsernamePasswordAuthenticationFilter.",
+        "technologies": ["Spring Security", "JWT"],
+        "errorPhrases": ["CORS"],
+        "lexicalScore": 14.0,
+        "vectorDistance": 0.06,
+        "evidenceCodes": ["LEXICAL_TEXT", "ERROR_PHRASE", "TECHNOLOGY"],
+        "expectedMatch": true
+      }
+    ],
+    "sameTechnology": [
+      {
+        "id": "72000000-0000-4000-8000-000000000002",
+        "title": "Spring Security password encoder mismatch",
+        "finalSolution": "Updated the PasswordEncoder configuration.",
+        "technologies": ["Spring Security", "JWT"],
+        "errorPhrases": [],
+        "lexicalScore": 9.0,
+        "vectorDistance": 0.04,
+        "evidenceCodes": ["TECHNOLOGY"],
+        "expectedMatch": false
+      }
+    ],
+    "sameErrorDifferentCause": [
+      {
+        "id": "72000000-0000-4000-8000-000000000003",
+        "title": "CORS blocked by CDN origin policy",
+        "finalSolution": "Updated the CDN origin allowlist instead of the application security filter chain.",
+        "technologies": ["Cloudflare"],
+        "errorPhrases": ["CORS"],
+        "lexicalScore": 11.0,
+        "vectorDistance": 0.44,
+        "evidenceCodes": ["ERROR_PHRASE"],
+        "expectedMatch": false
+      }
+    ],
+    "unrelated": [
+      {
+        "id": "72000000-0000-4000-8000-000000000004",
+        "title": "React hydration warning on date formatting",
+        "finalSolution": "Moved locale-specific formatting to the client.",
+        "technologies": ["React"],
+        "errorPhrases": ["hydration"],
+        "lexicalScore": 5.0,
+        "vectorDistance": 0.71,
+        "evidenceCodes": ["LEXICAL_TEXT"],
+        "expectedMatch": false
+      }
+    ]
+  }
+}

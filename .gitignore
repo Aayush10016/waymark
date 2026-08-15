@@ -1,0 +1,28 @@
+.DS_Store
+Thumbs.db
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+
+# Java / Maven
+target/
+*.class
+
+# TypeScript / Node
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+**/*.tsbuildinfo
+*.vsix
+
+# IDE
+.idea/
+.vscode/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*

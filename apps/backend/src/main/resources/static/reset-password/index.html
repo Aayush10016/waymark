@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="referrer" content="no-referrer" />
+    <title>Reset password · Trail</title>
+    <link rel="stylesheet" href="/identity/identity-page.css" />
+  </head>
+  <body>
+    <main>
+      <section class="card" aria-labelledby="page-title">
+        <p class="eyebrow">Trail</p>
+        <h1 id="page-title">Reset your password</h1>
+        <p id="page-copy">Enter a new password for your Trail account.</p>
+        <form id="reset-form">
+          <label>
+            New password
+            <input id="new-password" name="newPassword" type="password" autocomplete="new-password" minlength="12" required />
+          </label>
+          <label>
+            Confirm password
+            <input id="confirm-password" name="confirmPassword" type="password" autocomplete="new-password" minlength="12" required />
+          </label>
+          <button id="submit-button" type="submit">Reset password</button>
+        </form>
+        <p id="page-status" class="notice hidden" role="status" aria-live="polite"></p>
+      </section>
+    </main>
+    <script type="module" src="/identity/reset-password.js"></script>
+  </body>
+</html>

@@ -1,0 +1,1712 @@
+openapi: 3.1.0
+info:
+  title: Trail API
+  version: 1.0.0
+  description: Versioned HTTP contract shells for Trail v1.
+  license:
+    name: Proprietary
+    identifier: LicenseRef-Proprietary
+servers:
+  - url: /api
+    description: Same-origin API root.
+tags:
+  - name: Auth
+    description: Authentication resource shell.
+  - name: Capture
+    description: Browser capture resource shell.
+  - name: Problem
+    description: Problem Session resource shell.
+  - name: Search
+    description: Search and retrieval resource shell.
+  - name: Privacy
+    description: Privacy controls resource shell.
+paths:
+  /v1/auth:
+    summary: Authentication resource shell.
+    description: Operations are added by scoped authentication issues.
+  /v1/registrations:
+    post:
+      tags:
+        - Auth
+      operationId: registerUser
+      summary: Create an unverified email/password account.
+      description: >
+        Creates an unverified account using normalized email/password credentials
+        and sends a verification token through the configured identity email
+        adapter. Responses are intentionally generic to avoid account enumeration.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegistrationRequest"
+      responses:
+        "202":
+          description: Registration was accepted generically.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdentityMutationResponse"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+  /v1/email-verification-requests:
+    post:
+      tags:
+        - Auth
+      operationId: requestEmailVerification
+      summary: Request or resend an email verification token.
+      description: >
+        Sends a new verification token only when the email belongs to a pending
+        account. The response remains generic for missing, active, invalid, or
+        throttled accounts.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IdentityEmailRequest"
+      responses:
+        "202":
+          description: Verification request was accepted generically.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdentityMutationResponse"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+  /v1/email-verifications:
+    post:
+      tags:
+        - Auth
+      operationId: verifyEmail
+      summary: Consume a single-use email verification token.
+      description: >
+        Consumes an active verification token and marks the owning user email
+        verified. Invalid, expired, reused, or throttled tokens receive the same
+        generic response.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IdentityTokenRequest"
+      responses:
+        "202":
+          description: Verification was accepted generically.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdentityMutationResponse"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+  /v1/auth-sessions:
+    post:
+      tags:
+        - Auth
+      operationId: createAuthSession
+      summary: Authenticate email/password credentials.
+      description: >
+        Authenticates a verified active account and issues a short-lived RS256
+        access token plus a rotated opaque refresh credential.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthSessionRequest"
+      responses:
+        "200":
+          description: Credentials were accepted and tokens were issued.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IssuedAuthTokensResponse"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/UnauthorizedProblem"
+  /v1/auth-sessions/refresh:
+    post:
+      tags:
+        - Auth
+      operationId: refreshAuthSession
+      summary: Rotate an opaque refresh credential.
+      description: >
+        Rotates a valid active refresh credential, rejects unknown/expired/reused
+        credentials generically, and issues a new access token and refresh
+        credential.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshSessionRequest"
+      responses:
+        "200":
+          description: Refresh credential was rotated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IssuedAuthTokensResponse"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/UnauthorizedProblem"
+  /v1/auth-sessions/current:
+    delete:
+      tags:
+        - Auth
+      operationId: revokeCurrentAuthSession
+      summary: Revoke the current extension refresh-session family.
+      description: >
+        Idempotently revokes the refresh-session family containing the presented
+        refresh credential. Unknown, expired, or already revoked credentials
+        receive the same completion status.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshSessionRequest"
+      responses:
+        "204":
+          description: Current session revocation completed generically.
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+  /v1/password-reset-requests:
+    post:
+      tags:
+        - Auth
+      operationId: requestPasswordReset
+      summary: Request a password reset token.
+      description: >
+        Sends a reset token only when the email belongs to an active verified
+        account. Responses remain generic for all account/token/delivery states.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IdentityEmailRequest"
+      responses:
+        "202":
+          description: Password reset request was accepted generically.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdentityMutationResponse"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+  /v1/password-resets:
+    post:
+      tags:
+        - Auth
+      operationId: resetPassword
+      summary: Consume a password reset token and set a new password.
+      description: >
+        Consumes an active reset token, replaces the password hash, and revokes
+        all refresh-session families for the user. Invalid, expired, reused, or
+        throttled tokens receive the same generic response.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PasswordResetRequest"
+      responses:
+        "202":
+          description: Password reset was accepted generically.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdentityMutationResponse"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+  /v1/capture:
+    summary: Capture resource shell.
+    description: Operations are added by scoped capture issues.
+  /v1/consent-grants:
+    post:
+      tags:
+        - Privacy
+      operationId: grantCaptureConsent
+      summary: Record explicit browser metadata capture consent.
+      description: >
+        Records authenticated user consent for Trail's browser navigation metadata
+        capture boundary. This endpoint stores only consent evidence and never
+        receives browser history, page content, cookies, headers, form data,
+        screenshots, embeddings, or AI provider metadata.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CaptureConsentDecisionRequest"
+      responses:
+        "200":
+          description: Consent grant was recorded.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaptureConsentDecisionResponse"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/UnauthorizedProblem"
+  /v1/consent-withdrawals:
+    post:
+      tags:
+        - Privacy
+      operationId: withdrawCaptureConsent
+      summary: Record browser metadata capture consent withdrawal.
+      description: >
+        Records authenticated user withdrawal for Trail's browser navigation
+        metadata capture boundary. Capture ingestion rejects subsequent batches
+        until the user grants the current policy again.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CaptureConsentDecisionRequest"
+      responses:
+        "200":
+          description: Consent withdrawal was recorded.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaptureConsentDecisionResponse"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/UnauthorizedProblem"
+  /v1/capture-state:
+    get:
+      tags:
+        - Capture
+      operationId: getCaptureState
+      summary: Get the authenticated user's backend capture-state summary.
+      description: >
+        Returns a bounded backend state summary for extension clients, including
+        the current Problem Session candidate, prompt eligibility, recommendation
+        detail availability, and capture-consent policy freshness. This endpoint
+        never returns raw browser history, page content, cookies, headers, form
+        data, screenshots, embeddings, model scores, or provider metadata.
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Current bounded capture-state summary.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaptureStateSummaryResponse"
+        "401":
+          $ref: "#/components/responses/UnauthorizedProblem"
+  /v1/capture-batches:
+    post:
+      tags:
+        - Capture
+      operationId: ingestCaptureBatch
+      summary: Upload sanitized browser capture events.
+      description: >
+        Accepts a bounded batch of browser navigation metadata from the Chrome extension.
+        The backend authenticates the user, verifies active capture consent, validates and
+        re-sanitizes each event before persistence, and returns per-event accepted,
+        duplicate, or rejected results. The endpoint never accepts page content,
+        source code, cookies, headers, form data, screenshots, or raw browser history.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CaptureBatchRequest"
+      responses:
+        "200":
+          description: Batch processed with per-event results.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaptureBatchResponse"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/UnauthorizedProblem"
+        "413":
+          $ref: "#/components/responses/PayloadTooLargeProblem"
+  /v1/problems:
+    summary: Problem Session resource shell.
+    description: Operations are added by scoped problem-session issues.
+  /v1/problem-sessions:
+    post:
+      tags:
+        - Problem
+      operationId: startProblemSession
+      summary: Manually start a Problem Session.
+      description: >
+        Creates a user-owned manual Problem Session candidate. Clients may send a
+        stable problemSessionId to make repeated start commands idempotent. The
+        endpoint does not run AI, embeddings, search, or automatic detection.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StartProblemSessionRequest"
+      responses:
+        "200":
+          description: Manual Problem Session state.
+          headers:
+            ETag:
+              description: Current optimistic Problem Session version.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemSessionCommandResponse"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/UnauthorizedProblem"
+  /v1/problem-sessions/{problemSessionId}:
+    get:
+      tags:
+        - Problem
+      operationId: getProblemSessionDetail
+      summary: Get Problem Session detail and ordered artifacts.
+      description: >
+        Returns a bounded user-owned Problem Session detail representation with active
+        durable artifacts in stable display order. The endpoint reads only sanitized
+        durable artifact fields and never returns raw browser history, cookies,
+        headers, form data, screenshots, or page content.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: problemSessionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Problem Session detail with bounded active artifacts.
+          headers:
+            ETag:
+              description: Current optimistic Problem Session version.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemSessionDetailResponse"
+        "401":
+          $ref: "#/components/responses/UnauthorizedProblem"
+        "404":
+          $ref: "#/components/responses/NotFoundProblem"
+    delete:
+      tags:
+        - Problem
+      operationId: deleteProblemSession
+      summary: Delete one user-owned Problem Session.
+      description: >
+        Deletes a user-owned Problem Session and active derived artifacts,
+        derivations, embeddings, recommendation events, background jobs, and
+        source capture references. The endpoint never returns deleted content.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: problemSessionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Problem Session was deleted.
+        "401":
+          $ref: "#/components/responses/UnauthorizedProblem"
+        "404":
+          $ref: "#/components/responses/NotFoundProblem"
+  /v1/problem-sessions/{problemSessionId}/recommendation:
+    get:
+      tags:
+        - Search
+      operationId: getProblemSessionRecommendation
+      summary: Get a bounded recommendation for the current Problem Session.
+      description: >
+        Returns at most one user-owned previously solved Problem Session that is
+        similar to the provided current candidate, with the exact final solution
+        and deterministic evidence required by the Similar Problem Found UI.
+        A no-match result is represented as 204 No Content. The response never
+        exposes raw vector distance, model scores, lexical scores, embeddings,
+        hidden provenance, raw browser history, page content, cookies, headers,
+        form data, or screenshots.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: problemSessionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Bounded recommendation detail.
+          headers:
+            ETag:
+              description: Stable recommendation identifier for client caching.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemRecommendationDetailResponse"
+        "204":
+          description: No sufficiently similar solved Problem Session exists.
+        "401":
+          $ref: "#/components/responses/UnauthorizedProblem"
+        "404":
+          $ref: "#/components/responses/NotFoundProblem"
+  /v1/recommendations/{recommendationId}/events:
+    post:
+      tags:
+        - Search
+      operationId: recordRecommendationEvent
+      summary: Record one allowlisted recommendation event.
+      description: >
+        Records a user-owned recommendation lifecycle outcome after the server has
+        derived and stored the shown event. Clients cannot submit SHOWN and cannot
+        attach arbitrary session IDs, analytics payloads, provider output, or model
+        scores.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: recommendationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecommendationEventRequest"
+      responses:
+        "200":
+          description: Recommendation event write result.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecommendationEventResponse"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/UnauthorizedProblem"
+        "404":
+          $ref: "#/components/responses/NotFoundProblem"
+  /v1/problem-sessions/{problemSessionId}/finish:
+    post:
+      tags:
+        - Problem
+      operationId: finishProblemSession
+      summary: Manually finish a Problem Session capture boundary.
+      description: >
+        Moves a user-owned candidate Problem Session to reviewable state using an
+        If-Match optimistic version precondition. This command closes the
+        capture boundary only; exact final-solution persistence is handled by
+        the separate solution endpoint in a later milestone.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: problemSessionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: If-Match
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Current Problem Session version ETag.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FinishProblemSessionRequest"
+      responses:
+        "200":
+          description: Updated Problem Session state.
+          headers:
+            ETag:
+              description: Current optimistic Problem Session version.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemSessionCommandResponse"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/UnauthorizedProblem"
+        "404":
+          $ref: "#/components/responses/NotFoundProblem"
+        "409":
+          $ref: "#/components/responses/ConflictProblem"
+        "412":
+          $ref: "#/components/responses/PreconditionFailedProblem"
+        "428":
+          $ref: "#/components/responses/PreconditionRequiredProblem"
+  /v1/problem-sessions/{problemSessionId}/solution:
+    put:
+      tags:
+        - Problem
+      operationId: saveProblemSessionSolution
+      summary: Save a user-authored Problem Session solution.
+      description: >
+        Idempotently saves the exact user-authored final solution for a
+        user-owned reviewable Problem Session, transitions it to solved state,
+        and durably records the required post-solution background job in the
+        same transaction. This endpoint does not run AI, embeddings, search,
+        replay, or provider calls.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: problemSessionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: If-Match
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Current Problem Session version ETag.
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 128
+          description: Client retry key for duplicate solution submissions.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SaveProblemSessionSolutionRequest"
+      responses:
+        "200":
+          description: Solved Problem Session state and exact user-authored solution.
+          headers:
+            ETag:
+              description: Current optimistic Problem Session version.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemSessionSolutionResponse"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/UnauthorizedProblem"
+        "404":
+          $ref: "#/components/responses/NotFoundProblem"
+        "409":
+          $ref: "#/components/responses/ConflictProblem"
+        "412":
+          $ref: "#/components/responses/PreconditionFailedProblem"
+        "428":
+          $ref: "#/components/responses/PreconditionRequiredProblem"
+  /v1/search:
+    summary: Search resource shell.
+    description: Operations are added by scoped retrieval issues.
+  /v1/problem-session-searches:
+    post:
+      tags:
+        - Search
+      operationId: searchProblemSessions
+      summary: Search solved Problem Sessions.
+      description: >
+        Accepts sensitive search text and filters in the POST request body,
+        searches only solved Problem Sessions owned by the authenticated user,
+        and returns deterministic evidence for lexical degradation mode. Search
+        terms, filters, and cursors are never transported in URL query strings.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProblemSessionSearchRequest"
+      responses:
+        "200":
+          description: Solved Problem Session search results.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemSessionSearchResponse"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/UnauthorizedProblem"
+  /v1/privacy:
+    summary: Privacy resource shell.
+    description: Operations are added by scoped privacy issues.
+  /v1/account:
+    delete:
+      tags:
+        - Privacy
+      operationId: deleteAccount
+      summary: Reauthenticate and delete the authenticated account.
+      description: >
+        Reauthenticates with the current password, revokes refresh sessions, and
+        purges user-owned active data. The response includes backup-retention
+        disclosure and instructs clients to clear local device state.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeleteAccountRequest"
+      responses:
+        "200":
+          description: Account deletion completed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountDeletionResponse"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/UnauthorizedProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    RegistrationRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 3
+          maxLength: 320
+        password:
+          type: string
+          minLength: 1
+          maxLength: 1024
+          description: Raw password accepted only over TLS and never logged or stored.
+    AuthSessionRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 3
+          maxLength: 320
+        password:
+          type: string
+          minLength: 1
+          maxLength: 1024
+          description: Raw password accepted only over TLS and never logged or stored.
+    IdentityEmailRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 3
+          maxLength: 320
+    IdentityTokenRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - token
+      properties:
+        token:
+          type: string
+          minLength: 1
+          maxLength: 512
+          description: Raw one-time verification or reset credential.
+    RefreshSessionRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+          minLength: 1
+          maxLength: 512
+          description: Raw opaque refresh credential.
+    PasswordResetRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - token
+        - newPassword
+      properties:
+        token:
+          type: string
+          minLength: 1
+          maxLength: 512
+        newPassword:
+          type: string
+          minLength: 1
+          maxLength: 1024
+          description: Replacement raw password accepted only over TLS.
+    IdentityMutationResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum:
+            - ACCEPTED
+    IssuedAuthTokensResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - accessToken
+        - accessTokenExpiresAt
+        - refreshToken
+        - refreshTokenExpiresAt
+      properties:
+        accessToken:
+          type: string
+          minLength: 1
+          description: Short-lived RS256 bearer access token.
+        accessTokenExpiresAt:
+          type: string
+          format: date-time
+        refreshToken:
+          type: string
+          minLength: 1
+          description: Opaque refresh credential returned once to the extension.
+        refreshTokenExpiresAt:
+          type: string
+          format: date-time
+    CaptureConsentDecisionRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - policyVersion
+        - decidedAt
+      properties:
+        policyVersion:
+          type: string
+          enum:
+            - capture-consent-v1
+        decidedAt:
+          type: string
+          format: date-time
+    CaptureConsentDecisionResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - status
+        - policyVersion
+        - decidedAt
+      properties:
+        status:
+          type: string
+          enum:
+            - GRANTED
+            - WITHDRAWN
+        policyVersion:
+          type: string
+          enum:
+            - capture-consent-v1
+        decidedAt:
+          type: string
+          format: date-time
+    CaptureBatchRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - clientInstanceId
+        - events
+      properties:
+        clientInstanceId:
+          type: string
+          minLength: 1
+          maxLength: 128
+          description: Stable extension instance identifier.
+        events:
+          type: array
+          maxItems: 50
+          items:
+            $ref: "#/components/schemas/CaptureEventRequest"
+    CaptureEventRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - clientEventId
+        - source
+        - resourceType
+        - url
+        - occurredAt
+      properties:
+        clientEventId:
+          type: string
+          minLength: 1
+          maxLength: 128
+          description: Stable extension-generated capture event identifier.
+        clientSequence:
+          type: integer
+          format: int64
+          minimum: 0
+          nullable: true
+        tabSessionId:
+          type: string
+          minLength: 1
+          maxLength: 128
+          nullable: true
+        parentClientEventId:
+          type: string
+          minLength: 1
+          maxLength: 128
+          nullable: true
+        problemSessionId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Optional active Problem Session identifier captured at event time.
+        source:
+          $ref: "#/components/schemas/CaptureEventSource"
+        resourceType:
+          $ref: "#/components/schemas/CaptureResourceType"
+        navigationType:
+          type: string
+          minLength: 1
+          maxLength: 64
+          nullable: true
+        url:
+          type: string
+          minLength: 1
+          maxLength: 2048
+          description: URL metadata captured by the extension and re-sanitized server-side.
+        title:
+          type: string
+          maxLength: 4096
+          nullable: true
+          description: Page title metadata captured by the extension and bounded server-side.
+        browserEventTimeMilliseconds:
+          type: number
+          format: double
+          minimum: 0
+          nullable: true
+        occurredAt:
+          type: string
+          format: date-time
+        transitionQualifiers:
+          type: array
+          items:
+            type: string
+          default: []
+    CaptureEventSource:
+      type: string
+      enum:
+        - TAB_UPDATED
+        - WEB_NAVIGATION_COMMITTED
+        - WEB_NAVIGATION_HISTORY_STATE
+    CaptureResourceType:
+      type: string
+      enum:
+        - AI_CHAT
+        - DOCUMENTATION
+        - FORUM
+        - OTHER
+        - REPOSITORY
+        - SEARCH
+        - VIDEO
+    CaptureBatchResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - accepted
+        - duplicate
+        - rejected
+      properties:
+        accepted:
+          type: array
+          items:
+            $ref: "#/components/schemas/CaptureAcceptedEvent"
+        duplicate:
+          type: array
+          items:
+            $ref: "#/components/schemas/CaptureDuplicateEvent"
+        rejected:
+          type: array
+          items:
+            $ref: "#/components/schemas/CaptureRejectedEvent"
+    CaptureAcceptedEvent:
+      type: object
+      additionalProperties: false
+      required:
+        - clientEventId
+      properties:
+        clientEventId:
+          type: string
+    CaptureDuplicateEvent:
+      type: object
+      additionalProperties: false
+      required:
+        - clientEventId
+      properties:
+        clientEventId:
+          type: string
+    CaptureRejectedEvent:
+      type: object
+      additionalProperties: false
+      required:
+        - clientEventId
+        - code
+      properties:
+        clientEventId:
+          type: string
+          nullable: true
+        code:
+          $ref: "#/components/schemas/CaptureEventRejectionCode"
+    CaptureEventRejectionCode:
+      type: string
+      enum:
+        - CONSENT_REQUIRED
+        - INVALID_CLIENT_EVENT_ID
+        - INVALID_CLIENT_INSTANCE_ID
+        - INVALID_EVENT_TIME
+        - INVALID_METADATA
+        - INVALID_URL
+        - UNSAFE_URL
+    CaptureStateSummaryResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - promptEligibility
+        - recommendation
+        - policyFreshness
+      properties:
+        currentCandidate:
+          $ref: "#/components/schemas/CaptureStateCurrentCandidate"
+          nullable: true
+        promptEligibility:
+          $ref: "#/components/schemas/CaptureStatePromptEligibility"
+        recommendation:
+          $ref: "#/components/schemas/CaptureStateRecommendationSummary"
+        policyFreshness:
+          $ref: "#/components/schemas/CaptureStatePolicyFreshness"
+    CaptureStateCurrentCandidate:
+      type: object
+      additionalProperties: false
+      required:
+        - problemSessionId
+        - status
+        - startedAt
+        - updatedAt
+      properties:
+        problemSessionId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum:
+            - CANDIDATE
+            - REVIEWABLE
+        title:
+          type: string
+          maxLength: 200
+          nullable: true
+        startedAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    CaptureStatePromptEligibility:
+      type: object
+      additionalProperties: false
+      required:
+        - status
+        - reason
+      properties:
+        status:
+          type: string
+          enum:
+            - ELIGIBLE
+            - INELIGIBLE
+        reason:
+          type: string
+          enum:
+            - CONSENT_REQUIRED
+            - NO_CURRENT_CANDIDATE
+            - CURRENT_CANDIDATE_READY
+    CaptureStateRecommendationSummary:
+      type: object
+      additionalProperties: false
+      required:
+        - status
+      properties:
+        currentProblemSessionId:
+          type: string
+          format: uuid
+          nullable: true
+        status:
+          type: string
+          enum:
+            - DETAIL_ENDPOINT_REQUIRED
+            - NO_CURRENT_CANDIDATE
+            - RECOMMENDATION_DISABLED
+    CaptureStatePolicyFreshness:
+      type: object
+      additionalProperties: false
+      required:
+        - requiredPolicyVersion
+        - fresh
+      properties:
+        requiredPolicyVersion:
+          type: string
+        observedPolicyVersion:
+          type: string
+          nullable: true
+        fresh:
+          type: boolean
+    ProblemSessionSearchRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        query:
+          type: string
+          maxLength: 240
+          nullable: true
+          description: Sensitive search text sent only in the request body.
+        filters:
+          $ref: "#/components/schemas/ProblemSessionSearchFilters"
+        pageSize:
+          type: integer
+          minimum: 1
+          maximum: 50
+          default: 20
+        cursor:
+          type: string
+          nullable: true
+          description: Opaque cursor pinned to the normalized query and filter fingerprint.
+    ProblemSessionSearchFilters:
+      type: object
+      additionalProperties: false
+      properties:
+        technologies:
+          type: array
+          maxItems: 32
+          items:
+            type: string
+            minLength: 1
+            maxLength: 240
+          default: []
+        errorPhrases:
+          type: array
+          maxItems: 32
+          items:
+            type: string
+            minLength: 1
+            maxLength: 240
+          default: []
+        problemTypes:
+          type: array
+          maxItems: 32
+          items:
+            type: string
+            minLength: 1
+            maxLength: 240
+          default: []
+    ProblemSessionSearchResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - results
+        - degradationMode
+      properties:
+        results:
+          type: array
+          maxItems: 50
+          items:
+            $ref: "#/components/schemas/ProblemSessionSearchResult"
+        nextCursor:
+          type: string
+          nullable: true
+        degradationMode:
+          $ref: "#/components/schemas/SearchDegradationMode"
+    ProblemSessionSearchResult:
+      type: object
+      additionalProperties: false
+      required:
+        - problemSessionId
+        - finalSolution
+        - technologies
+        - errorPhrases
+        - evidenceCodes
+        - updatedAt
+      properties:
+        problemSessionId:
+          type: string
+          format: uuid
+        title:
+          type: string
+          nullable: true
+          maxLength: 200
+        finalSolution:
+          type: string
+        generatedSummary:
+          type: string
+          nullable: true
+        technologies:
+          type: array
+          items:
+            type: string
+        errorPhrases:
+          type: array
+          items:
+            type: string
+        problemType:
+          type: string
+          nullable: true
+        evidenceCodes:
+          type: array
+          items:
+            $ref: "#/components/schemas/SearchEvidenceCode"
+        updatedAt:
+          type: string
+          format: date-time
+    SearchEvidenceCode:
+      type: string
+      enum:
+        - LEXICAL_TEXT
+        - ERROR_PHRASE
+        - TECHNOLOGY
+    SearchDegradationMode:
+      type: string
+      enum:
+        - LEXICAL
+    ProblemRecommendationDetailResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - recommendationId
+        - currentProblemSessionId
+        - recommendedProblemSessionId
+        - strength
+        - finalSolution
+        - algorithmVersion
+        - evidence
+        - whyThis
+      properties:
+        recommendationId:
+          type: string
+          format: uuid
+        currentProblemSessionId:
+          type: string
+          format: uuid
+        recommendedProblemSessionId:
+          type: string
+          format: uuid
+        strength:
+          $ref: "#/components/schemas/ProblemRecommendationStrength"
+        title:
+          type: string
+          maxLength: 200
+          nullable: true
+        finalSolution:
+          type: string
+          description: Exact user-authored final solution from the prior solved Problem Session.
+        solvedAt:
+          type: string
+          format: date-time
+          nullable: true
+        durationSeconds:
+          type: integer
+          minimum: 0
+          nullable: true
+        algorithmVersion:
+          type: string
+        evidence:
+          type: array
+          minItems: 1
+          maxItems: 4
+          items:
+            $ref: "#/components/schemas/ProblemRecommendationEvidence"
+        whyThis:
+          type: array
+          minItems: 1
+          maxItems: 4
+          items:
+            $ref: "#/components/schemas/ProblemRecommendationWhyThisMessage"
+    ProblemRecommendationStrength:
+      type: string
+      enum:
+        - STRONG
+        - POSSIBLE
+    ProblemRecommendationEvidence:
+      type: object
+      additionalProperties: false
+      required:
+        - evidenceCode
+        - problemSessionId
+      properties:
+        evidenceCode:
+          $ref: "#/components/schemas/SimilarityEvidenceCode"
+        problemSessionId:
+          type: string
+          format: uuid
+        artifactId:
+          type: string
+          format: uuid
+          nullable: true
+    ProblemRecommendationWhyThisMessage:
+      type: object
+      additionalProperties: false
+      required:
+        - evidenceCode
+        - problemSessionId
+        - message
+      properties:
+        evidenceCode:
+          $ref: "#/components/schemas/SimilarityEvidenceCode"
+        problemSessionId:
+          type: string
+          format: uuid
+        artifactId:
+          type: string
+          format: uuid
+          nullable: true
+        message:
+          type: string
+    SimilarityEvidenceCode:
+      type: string
+      enum:
+        - VECTOR_DISTANCE
+        - LEXICAL_TEXT
+        - ERROR_PHRASE
+        - TECHNOLOGY
+    RecommendationEventRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - outcome
+      properties:
+        outcome:
+          $ref: "#/components/schemas/ClientRecommendationEventOutcome"
+    RecommendationEventResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - recommendationId
+        - outcome
+        - status
+      properties:
+        recommendationId:
+          type: string
+          format: uuid
+        outcome:
+          $ref: "#/components/schemas/ClientRecommendationEventOutcome"
+        status:
+          $ref: "#/components/schemas/RecommendationEventWriteStatus"
+    ClientRecommendationEventOutcome:
+      type: string
+      enum:
+        - OPENED
+        - HELPFUL
+        - NOT_RELATED
+        - DISMISSED
+    RecommendationEventWriteStatus:
+      type: string
+      enum:
+        - ACCEPTED
+        - DUPLICATE
+    StartProblemSessionRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        problemSessionId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Optional client-generated ID used for idempotent manual starts.
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+          nullable: true
+        startedAt:
+          type: string
+          format: date-time
+          nullable: true
+    FinishProblemSessionRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        finishedAt:
+          type: string
+          format: date-time
+          nullable: true
+    SaveProblemSessionSolutionRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - finalSolution
+      properties:
+        finalSolution:
+          type: string
+          minLength: 1
+          description: Exact user-authored final solution text.
+    DeleteAccountRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - password
+      properties:
+        password:
+          type: string
+          minLength: 1
+          description: Current password used only for reauthentication.
+    AccountDeletionResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - status
+        - deletedAt
+        - backupDisclosure
+        - localCleanupRequired
+      properties:
+        status:
+          type: string
+          enum:
+            - COMPLETED
+        deletedAt:
+          type: string
+          format: date-time
+        backupDisclosure:
+          type: string
+        localCleanupRequired:
+          type: boolean
+    ProblemSessionCommandResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - status
+        - source
+        - version
+        - startedAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          $ref: "#/components/schemas/ProblemSessionStatus"
+        source:
+          $ref: "#/components/schemas/ProblemSessionSource"
+        version:
+          type: integer
+          format: int64
+          minimum: 0
+        title:
+          type: string
+          nullable: true
+        startedAt:
+          type: string
+          format: date-time
+        endedAt:
+          type: string
+          format: date-time
+          nullable: true
+        updatedAt:
+          type: string
+          format: date-time
+    ProblemSessionDetailResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - status
+        - source
+        - version
+        - startedAt
+        - updatedAt
+        - artifacts
+        - omittedArtifactCount
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          $ref: "#/components/schemas/ProblemSessionStatus"
+        source:
+          $ref: "#/components/schemas/ProblemSessionSource"
+        version:
+          type: integer
+          format: int64
+          minimum: 0
+        title:
+          type: string
+          nullable: true
+          maxLength: 200
+        description:
+          type: string
+          nullable: true
+          maxLength: 4000
+        localNote:
+          type: string
+          nullable: true
+          maxLength: 4000
+        startedAt:
+          type: string
+          format: date-time
+        endedAt:
+          type: string
+          format: date-time
+          nullable: true
+        updatedAt:
+          type: string
+          format: date-time
+        artifacts:
+          type: array
+          maxItems: 100
+          items:
+            $ref: "#/components/schemas/SessionArtifactDetailResponse"
+        omittedArtifactCount:
+          type: integer
+          minimum: 0
+          description: Number of active artifacts omitted after applying the response bound.
+    ProblemSessionSolutionResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - status
+        - source
+        - version
+        - finalSolution
+        - finalSolutionAuthor
+        - solutionAuthoredAt
+        - startedAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          $ref: "#/components/schemas/ProblemSessionStatus"
+        source:
+          $ref: "#/components/schemas/ProblemSessionSource"
+        version:
+          type: integer
+          format: int64
+          minimum: 0
+        title:
+          type: string
+          nullable: true
+          maxLength: 200
+        finalSolution:
+          type: string
+          description: Exact user-authored final solution text.
+        finalSolutionAuthor:
+          type: string
+          enum:
+            - USER
+        solutionAuthoredAt:
+          type: string
+          format: date-time
+        startedAt:
+          type: string
+          format: date-time
+        endedAt:
+          type: string
+          format: date-time
+          nullable: true
+        updatedAt:
+          type: string
+          format: date-time
+    SessionArtifactDetailResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - position
+        - artifactType
+        - occurredAt
+        - decisive
+      properties:
+        id:
+          type: string
+          format: uuid
+        position:
+          type: integer
+          minimum: 1
+          description: Stable active display position.
+        artifactType:
+          $ref: "#/components/schemas/SessionArtifactType"
+        sanitizedUrl:
+          type: string
+          nullable: true
+          maxLength: 2048
+          description: Sanitized HTTP(S) URL copied into durable session artifacts.
+        hostname:
+          type: string
+          nullable: true
+          maxLength: 253
+        title:
+          type: string
+          nullable: true
+          maxLength: 120
+        queryText:
+          type: string
+          nullable: true
+          maxLength: 240
+          description: Optional allowlisted bounded search text copied into durable session artifacts.
+        occurredAt:
+          type: string
+          format: date-time
+        decisive:
+          type: boolean
+    SessionArtifactType:
+      type: string
+      enum:
+        - PAGE
+        - SEARCH_QUERY
+        - DOCUMENTATION
+        - GITHUB_REPOSITORY
+        - GITHUB_ISSUE
+        - DISCUSSION
+        - VIDEO
+        - AI_CHAT_LINK
+        - USER_NOTE_REFERENCE
+    ProblemSessionStatus:
+      type: string
+      enum:
+        - CANDIDATE
+        - REVIEWABLE
+        - SOLVED
+        - DISMISSED
+        - UNSOLVED
+        - DELETED
+    ProblemSessionSource:
+      type: string
+      enum:
+        - MANUAL
+        - DETECTED
+    Problem:
+      type: object
+      additionalProperties: true
+      required:
+        - type
+        - title
+        - status
+        - detail
+        - code
+        - requestId
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        code:
+          type: string
+        requestId:
+          type: string
+  responses:
+    BadRequestProblem:
+      description: Request body is malformed or semantically invalid.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    ForbiddenProblem:
+      description: Authenticated principal is not allowed to perform the operation.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    UnauthorizedProblem:
+      description: Bearer access token is missing or invalid.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    PayloadTooLargeProblem:
+      description: Capture batch exceeds the maximum supported event count.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    NotFoundProblem:
+      description: Resource was not found or is not owned by the authenticated user.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    ConflictProblem:
+      description: Current resource state does not permit the requested transition.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    PreconditionFailedProblem:
+      description: Optimistic version precondition is stale.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    PreconditionRequiredProblem:
+      description: Required optimistic version precondition is missing.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
