@@ -95,84 +95,84 @@ export function activate(context: vscode.ExtensionContext): void {
   );
 
   context.subscriptions.push(
-    vscode.window.registerTreeDataProvider("trail.projectMemory", projectMemoryView),
-    vscode.commands.registerCommand("trail.openProjectMemory", async () => {
-      await vscode.commands.executeCommand("workbench.view.extension.trail");
+    vscode.window.registerTreeDataProvider("waymark.projectMemory", projectMemoryView),
+    vscode.commands.registerCommand("waymark.openProjectMemory", async () => {
+      await vscode.commands.executeCommand("workbench.view.extension.waymark");
     }),
-    vscode.commands.registerCommand("trail.initializeProject", async () => {
+    vscode.commands.registerCommand("waymark.initializeProject", async () => {
       await projectMemoryView.initializeProject();
     }),
-    vscode.commands.registerCommand("trail.selectWorkspaceFolder", (folderPath: string) => {
+    vscode.commands.registerCommand("waymark.selectWorkspaceFolder", (folderPath: string) => {
       projectMemoryView.selectWorkspaceFolder(folderPath);
     }),
-    vscode.commands.registerCommand("trail.createConstitution", async () => {
+    vscode.commands.registerCommand("waymark.createConstitution", async () => {
       await projectMemoryView.createConstitution();
     }),
-    vscode.commands.registerCommand("trail.openConstitution", async () => {
+    vscode.commands.registerCommand("waymark.openConstitution", async () => {
       await projectMemoryView.openConstitution();
     }),
-    vscode.commands.registerCommand("trail.addRule", async () => {
+    vscode.commands.registerCommand("waymark.addRule", async () => {
       await projectMemoryView.createRule();
     }),
-    vscode.commands.registerCommand("trail.deleteRule", async (item) => {
+    vscode.commands.registerCommand("waymark.deleteRule", async (item) => {
       await projectMemoryView.deleteRuleFromTreeItem(item as Parameters<typeof projectMemoryView.deleteRuleFromTreeItem>[0]);
     }),
-    vscode.commands.registerCommand("trail.addDecision", async () => {
+    vscode.commands.registerCommand("waymark.addDecision", async () => {
       await projectMemoryView.createDecision();
     }),
-    vscode.commands.registerCommand("trail.importArchitectureDocument", async () => {
+    vscode.commands.registerCommand("waymark.importArchitectureDocument", async () => {
       await projectMemoryView.importArchitectureDocument();
     }),
-    vscode.commands.registerCommand("trail.showFutureFeature", async (featureName: "Project Memory" | "Guardian") => {
+    vscode.commands.registerCommand("waymark.showFutureFeature", async (featureName: "Project Memory" | "Guardian") => {
       await projectMemoryView.showFutureFeature(featureName);
     }),
-    vscode.commands.registerCommand("trail.refreshGitContext", () => {
+    vscode.commands.registerCommand("waymark.refreshGitContext", () => {
       projectMemoryView.refresh();
     }),
-    vscode.commands.registerCommand("trail.openChangedFile", async (folder, fileStatus) => {
+    vscode.commands.registerCommand("waymark.openChangedFile", async (folder, fileStatus) => {
       await projectMemoryView.openChangedFile(folder as Parameters<typeof projectMemoryView.openChangedFile>[0], fileStatus as Parameters<typeof projectMemoryView.openChangedFile>[1]);
     }),
-    vscode.commands.registerCommand("trail.viewFileDiff", async (folder, fileStatus) => {
+    vscode.commands.registerCommand("waymark.viewFileDiff", async (folder, fileStatus) => {
       await projectMemoryView.viewFileDiff(folder as Parameters<typeof projectMemoryView.viewFileDiff>[0], fileStatus as Parameters<typeof projectMemoryView.viewFileDiff>[1]);
     }),
-    vscode.commands.registerCommand("trail.showCommitDetails", async (folder, sha) => {
+    vscode.commands.registerCommand("waymark.showCommitDetails", async (folder, sha) => {
       await projectMemoryView.showCommitDetails(folder as Parameters<typeof projectMemoryView.showCommitDetails>[0], sha as string);
     }),
-    vscode.commands.registerCommand("trail.searchProjectMemory", async () => {
+    vscode.commands.registerCommand("waymark.searchProjectMemory", async () => {
       await projectMemoryView.searchProjectMemory();
     }),
-    vscode.commands.registerCommand("trail.refreshProjectMemory", async () => {
+    vscode.commands.registerCommand("waymark.refreshProjectMemory", async () => {
       await projectMemoryView.refreshProjectMemory();
     }),
-    vscode.commands.registerCommand("trail.showMemoryResultDetails", async (result) => {
+    vscode.commands.registerCommand("waymark.showMemoryResultDetails", async (result) => {
       await projectMemoryView.showMemoryResultDetails(result as Parameters<typeof projectMemoryView.showMemoryResultDetails>[0]);
     }),
-    vscode.commands.registerCommand("trail.explainSelectedCode", async () => {
+    vscode.commands.registerCommand("waymark.explainSelectedCode", async () => {
       await runCodeContextCommand(() => aiController.explainSelectedCode());
     }),
-    vscode.commands.registerCommand("trail.showCodeContext", async () => {
+    vscode.commands.registerCommand("waymark.showCodeContext", async () => {
       await runCodeContextCommand(() => codeContextController.showCodeContext(formatCodeContextPackage));
     }),
-    vscode.commands.registerCommand("trail.checkSelectedCode", async () => {
+    vscode.commands.registerCommand("waymark.checkSelectedCode", async () => {
       await runCodeContextCommand(() => guardianController.checkSelectedCode());
     }),
-    vscode.commands.registerCommand("trail.checkCurrentChanges", async () => {
+    vscode.commands.registerCommand("waymark.checkCurrentChanges", async () => {
       await runCodeContextCommand(() => guardianController.checkCurrentChanges());
     }),
-    vscode.commands.registerCommand("trail.showGuardianFinding", async (finding) => {
+    vscode.commands.registerCommand("waymark.showGuardianFinding", async (finding) => {
       await runCodeContextCommand(() => guardianController.showFindingDetail(finding as Parameters<typeof guardianController.showFindingDetail>[0]));
     }),
-    vscode.commands.registerCommand("trail.askAboutSelectedCode", async () => {
+    vscode.commands.registerCommand("waymark.askAboutSelectedCode", async () => {
       await runCodeContextCommand(() => aiController.askAboutSelectedCode());
     }),
-    vscode.commands.registerCommand("trail.showAiConfiguration", async () => {
+    vscode.commands.registerCommand("waymark.showAiConfiguration", async () => {
       await runCodeContextCommand(() => aiController.showConfiguration());
     }),
     codeContextOutputChannel,
     guardianOutputChannel,
     automaticGuardian,
     aiOutputChannel,
-    vscode.workspace.registerTextDocumentContentProvider("trail-git", gitRevisionContentProvider),
+    vscode.workspace.registerTextDocumentContentProvider("waymark-git", gitRevisionContentProvider),
     vscode.workspace.onDidChangeWorkspaceFolders(() => {
       projectMemoryView.refresh();
     })

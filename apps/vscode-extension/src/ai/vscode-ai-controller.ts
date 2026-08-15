@@ -107,7 +107,7 @@ export class VsCodeAiController {
       this.outputChannel.clear();
       this.outputChannel.appendLine(formatGroundedAiResponse(response));
       this.outputChannel.show(true);
-      const panel = vscode.window.createWebviewPanel("trail.aiResponse", "Waymark AI", vscode.ViewColumn.Beside, {
+      const panel = vscode.window.createWebviewPanel("waymark.aiResponse", "Waymark AI", vscode.ViewColumn.Beside, {
         enableScripts: false
       });
       panel.webview.html = formatGroundedAiResponseHtml(response);

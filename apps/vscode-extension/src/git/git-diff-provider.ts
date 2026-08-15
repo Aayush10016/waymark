@@ -46,7 +46,7 @@ export class GitRevisionContentProvider implements vscode.TextDocumentContentPro
 
   public uri(workspaceFolder: WorkspaceFolderInfo, filePath: string, revision = "HEAD"): vscode.Uri {
     return vscode.Uri.from({
-      scheme: "trail-git",
+      scheme: "waymark-git",
       path: `/${filePath}`,
       query: new URLSearchParams({
         workspaceName: workspaceFolder.name,

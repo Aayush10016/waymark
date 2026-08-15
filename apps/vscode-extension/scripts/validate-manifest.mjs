@@ -88,40 +88,60 @@ if (manifest.devDependencies?.["@vscode/vsce"] === undefined) {
   throw new Error("Missing local VSCE packaging dependency.");
 }
 
+if (manifest.version !== "0.1.1") {
+  throw new Error("Waymark package version must be 0.1.1 for the contribution ID migration release.");
+}
+
 const requiredCommands = new Set([
-  "trail.openProjectMemory",
-  "trail.initializeProject",
-  "trail.selectWorkspaceFolder",
-  "trail.createConstitution",
-  "trail.openConstitution",
-  "trail.addRule",
-  "trail.deleteRule",
-  "trail.addDecision",
-  "trail.importArchitectureDocument",
-  "trail.showFutureFeature",
-  "trail.refreshGitContext",
-  "trail.openChangedFile",
-  "trail.viewFileDiff",
-  "trail.showCommitDetails",
-  "trail.searchProjectMemory",
-  "trail.refreshProjectMemory",
-  "trail.showMemoryResultDetails",
-  "trail.explainSelectedCode",
-  "trail.showCodeContext",
-  "trail.checkSelectedCode",
-  "trail.checkCurrentChanges",
-  "trail.showGuardianFinding",
-  "trail.askAboutSelectedCode",
-  "trail.showAiConfiguration"
+  "waymark.openProjectMemory",
+  "waymark.initializeProject",
+  "waymark.selectWorkspaceFolder",
+  "waymark.createConstitution",
+  "waymark.openConstitution",
+  "waymark.addRule",
+  "waymark.deleteRule",
+  "waymark.addDecision",
+  "waymark.importArchitectureDocument",
+  "waymark.showFutureFeature",
+  "waymark.refreshGitContext",
+  "waymark.openChangedFile",
+  "waymark.viewFileDiff",
+  "waymark.showCommitDetails",
+  "waymark.searchProjectMemory",
+  "waymark.refreshProjectMemory",
+  "waymark.showMemoryResultDetails",
+  "waymark.explainSelectedCode",
+  "waymark.showCodeContext",
+  "waymark.checkSelectedCode",
+  "waymark.checkCurrentChanges",
+  "waymark.showGuardianFinding",
+  "waymark.askAboutSelectedCode",
+  "waymark.showAiConfiguration"
 ]);
 
 const commands = new Set(
   (manifest.contributes?.commands ?? []).map((command) => command.command)
 );
 
+const contributionManifest = JSON.stringify({
+  activationEvents: manifest.activationEvents ?? [],
+  contributes: manifest.contributes ?? {}
+});
+for (const staleContributionId of [
+  "trail.",
+  "trail.projectMemory",
+  "trail.editorContext",
+  "onView:trail",
+  "onCommand:trail"
+]) {
+  if (contributionManifest.includes(staleContributionId)) {
+    throw new Error(`Stale Trail contribution ID remains in the manifest: ${staleContributionId}`);
+  }
+}
+
 for (const staleCommand of [
-  "trail.explainSelectedCodeWithAi",
-  "trail.askAboutSelectedCodeWithAi"
+  "waymark.explainSelectedCodeWithAi",
+  "waymark.askAboutSelectedCodeWithAi"
 ]) {
   if (commands.has(staleCommand)) {
     throw new Error(`Stale command contribution remains registered: ${staleCommand}`);
@@ -142,33 +162,33 @@ for (const requiredCommand of requiredCommands) {
 }
 
 const containers = manifest.contributes?.viewsContainers?.activitybar ?? [];
-if (!containers.some((container) => container.id === "trail")) {
+if (!containers.some((container) => container.id === "waymark")) {
   throw new Error("Missing Waymark Activity Bar container.");
 }
-if (!containers.some((container) => container.id === "trail" && container.title === "Waymark")) {
+if (!containers.some((container) => container.id === "waymark" && container.title === "Waymark")) {
   throw new Error("Waymark Activity Bar container must use Waymark branding.");
 }
 
-const views = manifest.contributes?.views?.trail ?? [];
-if (!views.some((view) => view.id === "trail.projectMemory")) {
+const views = manifest.contributes?.views?.waymark ?? [];
+if (!views.some((view) => view.id === "waymark.projectMemory")) {
   throw new Error("Missing Waymark Project Memory view.");
 }
 
 const editorContextMenus = manifest.contributes?.menus?.["editor/context"] ?? [];
-if (!editorContextMenus.some((menu) => menu.submenu === "trail.editorContext" && menu.when === "editorHasSelection")) {
+if (!editorContextMenus.some((menu) => menu.submenu === "waymark.editorContext" && menu.when === "editorHasSelection")) {
   throw new Error("Missing selected-code Waymark editor context submenu.");
 }
 
-const trailEditorMenuCommands = new Set(
-  (manifest.contributes?.menus?.["trail.editorContext"] ?? []).map((menu) => menu.command)
+const waymarkEditorMenuCommands = new Set(
+  (manifest.contributes?.menus?.["waymark.editorContext"] ?? []).map((menu) => menu.command)
 );
 for (const requiredEditorCommand of [
-  "trail.explainSelectedCode",
-  "trail.askAboutSelectedCode",
-  "trail.checkSelectedCode",
-  "trail.showCodeContext"
+  "waymark.explainSelectedCode",
+  "waymark.askAboutSelectedCode",
+  "waymark.checkSelectedCode",
+  "waymark.showCodeContext"
 ]) {
-  if (!trailEditorMenuCommands.has(requiredEditorCommand)) {
+  if (!waymarkEditorMenuCommands.has(requiredEditorCommand)) {
     throw new Error(`Missing Waymark editor context command: ${requiredEditorCommand}`);
   }
 }
@@ -178,7 +198,7 @@ if (!existsSync(mainPath)) {
   throw new Error(`Compiled extension entry does not exist: ${manifest.main}`);
 }
 
-const iconPath = containers.find((container) => container.id === "trail")?.icon;
+const iconPath = containers.find((container) => container.id === "waymark")?.icon;
 if (typeof iconPath !== "string" || !existsSync(join(extensionRoot, iconPath))) {
   throw new Error("Waymark Activity Bar icon is missing.");
 }

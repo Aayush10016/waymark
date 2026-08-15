@@ -24,7 +24,7 @@ describe("VS Code extension manifest", () => {
       "governance",
       "nvidia"
     ]));
-    expect(manifest.version).toMatch(/^\d+\.\d+\.\d+$/u);
+    expect(manifest.version).toBe("0.1.1");
     expect(manifest.engines.vscode).toBe("^1.125.0");
     expect(manifest.main).toBe("./dist/extension.js");
     expect(manifest.icon).toBe("resources/waymark.png");
@@ -46,7 +46,7 @@ describe("VS Code extension manifest", () => {
   it("references extension resources that are packageable from the extension root", async () => {
     const manifest = await readManifest();
     const activityBarContainer = manifest.contributes.viewsContainers.activitybar.find(
-      (container) => container.id === "trail"
+      (container) => container.id === "waymark"
     );
 
     expect(activityBarContainer?.title).toBe("Waymark");
@@ -55,45 +55,88 @@ describe("VS Code extension manifest", () => {
     expect(existsSync(join(process.cwd(), "resources/waymark.png"))).toBe(true);
   });
 
+  it("uses Waymark-specific view and menu contribution IDs", async () => {
+    const manifest = await readManifest();
+
+    expect(manifest.contributes.viewsContainers.activitybar).toContainEqual(expect.objectContaining({
+      id: "waymark",
+      title: "Waymark"
+    }));
+    expect(Object.keys(manifest.contributes.views)).toContain("waymark");
+    expect(manifest.contributes.views.waymark).toContainEqual(expect.objectContaining({
+      id: "waymark.projectMemory",
+      name: "Project Memory"
+    }));
+    expect(manifest.contributes.submenus).toContainEqual({
+      id: "waymark.editorContext",
+      label: "Waymark"
+    });
+  });
+
   it("maps Explain Selected Code to the real AI command and keeps Show Code Context local", async () => {
     const manifest = await readManifest();
     const commands = manifest.contributes.commands;
 
-    expect(commandTitles(commands)).toContainEqual(["trail.explainSelectedCode", "Waymark: Explain Selected Code"]);
-    expect(commandTitles(commands)).toContainEqual(["trail.askAboutSelectedCode", "Waymark: Ask About Selected Code"]);
-    expect(commandTitles(commands)).toContainEqual(["trail.showCodeContext", "Waymark: Show Code Context"]);
-    expect(commandTitles(commands)).not.toContainEqual(["trail.explainSelectedCodeWithAi", "Waymark: Explain Selected Code with AI"]);
+    expect(commandTitles(commands)).toContainEqual(["waymark.explainSelectedCode", "Waymark: Explain Selected Code"]);
+    expect(commandTitles(commands)).toContainEqual(["waymark.askAboutSelectedCode", "Waymark: Ask About Selected Code"]);
+    expect(commandTitles(commands)).toContainEqual(["waymark.showCodeContext", "Waymark: Show Code Context"]);
+    expect(commandTitles(commands)).not.toContainEqual(["waymark.explainSelectedCodeWithAi", "Waymark: Explain Selected Code with AI"]);
   });
 
   it("registers user-facing commands exactly once", async () => {
     const manifest = await readManifest();
     const commandIds = manifest.contributes.commands.map((command) => command.command);
 
-    expect(commandIds.filter((command) => command === "trail.explainSelectedCode")).toHaveLength(1);
-    expect(commandIds.filter((command) => command === "trail.askAboutSelectedCode")).toHaveLength(1);
-    expect(commandIds.filter((command) => command === "trail.showCodeContext")).toHaveLength(1);
-    expect(commandIds.filter((command) => command === "trail.checkSelectedCode")).toHaveLength(1);
-    expect(commandIds.filter((command) => command === "trail.importArchitectureDocument")).toHaveLength(1);
-    expect(commandIds.filter((command) => command === "trail.deleteRule")).toHaveLength(1);
+    expect(commandIds.filter((command) => command === "waymark.explainSelectedCode")).toHaveLength(1);
+    expect(commandIds.filter((command) => command === "waymark.askAboutSelectedCode")).toHaveLength(1);
+    expect(commandIds.filter((command) => command === "waymark.showCodeContext")).toHaveLength(1);
+    expect(commandIds.filter((command) => command === "waymark.checkSelectedCode")).toHaveLength(1);
+    expect(commandIds.filter((command) => command === "waymark.importArchitectureDocument")).toHaveLength(1);
+    expect(commandIds.filter((command) => command === "waymark.deleteRule")).toHaveLength(1);
+  });
+
+  it("does not contribute stale Trail command, view, or submenu IDs", async () => {
+    const manifest = await readManifest();
+    const commandIds = manifest.contributes.commands.map((command) => command.command);
+    const activationEvents = manifest.activationEvents;
+    const menuKeys = Object.keys(manifest.contributes.menus);
+    const viewKeys = Object.keys(manifest.contributes.views);
+    const viewIds = Object.values(manifest.contributes.views).flat().map((view) => view.id);
+    const submenuIds = manifest.contributes.submenus.map((submenu) => submenu.id);
+    const serializedContributions = JSON.stringify({
+      activationEvents,
+      contributes: manifest.contributes
+    });
+
+    expect(commandIds.filter((command) => command.startsWith("trail."))).toEqual([]);
+    expect(activationEvents.filter((event) => event.startsWith("onCommand:trail."))).toEqual([]);
+    expect(activationEvents).not.toContain("onView:trail.projectMemory");
+    expect(viewKeys).not.toContain("trail");
+    expect(viewIds).not.toContain("trail.projectMemory");
+    expect(menuKeys).not.toContain("trail.editorContext");
+    expect(submenuIds).not.toContain("trail.editorContext");
+    expect(serializedContributions).not.toContain("trail.");
+    expect(serializedContributions).not.toContain("trail.projectMemory");
+    expect(serializedContributions).not.toContain("trail.editorContext");
   });
 
   it("contributes selected-code editor context menu actions under Waymark", async () => {
     const manifest = await readManifest();
 
     expect(manifest.contributes.submenus).toContainEqual({
-      id: "trail.editorContext",
+      id: "waymark.editorContext",
       label: "Waymark"
     });
     expect(manifest.contributes.menus["editor/context"]).toContainEqual({
-      submenu: "trail.editorContext",
+      submenu: "waymark.editorContext",
       when: "editorHasSelection",
       group: "navigation@10"
     });
-    expect(manifest.contributes.menus["trail.editorContext"]).toEqual([
-      expect.objectContaining({ command: "trail.explainSelectedCode", when: "editorHasSelection" }),
-      expect.objectContaining({ command: "trail.askAboutSelectedCode", when: "editorHasSelection" }),
-      expect.objectContaining({ command: "trail.checkSelectedCode", when: "editorHasSelection" }),
-      expect.objectContaining({ command: "trail.showCodeContext", when: "editorHasSelection" })
+    expect(manifest.contributes.menus["waymark.editorContext"]).toEqual([
+      expect.objectContaining({ command: "waymark.explainSelectedCode", when: "editorHasSelection" }),
+      expect.objectContaining({ command: "waymark.askAboutSelectedCode", when: "editorHasSelection" }),
+      expect.objectContaining({ command: "waymark.checkSelectedCode", when: "editorHasSelection" }),
+      expect.objectContaining({ command: "waymark.showCodeContext", when: "editorHasSelection" })
     ]);
   });
 
@@ -101,28 +144,28 @@ describe("VS Code extension manifest", () => {
     const manifest = await readManifest();
 
     expect(manifest.activationEvents).toEqual(expect.arrayContaining([
-      "onCommand:trail.explainSelectedCode",
-      "onCommand:trail.askAboutSelectedCode",
-      "onCommand:trail.showAiConfiguration"
+      "onCommand:waymark.explainSelectedCode",
+      "onCommand:waymark.askAboutSelectedCode",
+      "onCommand:waymark.showAiConfiguration"
     ]));
-    expect(manifest.activationEvents).not.toContain("onCommand:trail.explainSelectedCodeWithAi");
-    expect(manifest.activationEvents).not.toContain("onCommand:trail.askAboutSelectedCodeWithAi");
+    expect(manifest.activationEvents).not.toContain("onCommand:waymark.explainSelectedCodeWithAi");
+    expect(manifest.activationEvents).not.toContain("onCommand:waymark.askAboutSelectedCodeWithAi");
   });
 
   it("contributes sidebar rule actions without expanding the editor context menu", async () => {
     const manifest = await readManifest();
 
     expect(commandTitles(manifest.contributes.commands)).toContainEqual([
-      "trail.importArchitectureDocument",
+      "waymark.importArchitectureDocument",
       "Waymark: Import Architecture Document"
     ]);
-    expect(commandTitles(manifest.contributes.commands)).toContainEqual(["trail.deleteRule", "Waymark: Delete Rule"]);
+    expect(commandTitles(manifest.contributes.commands)).toContainEqual(["waymark.deleteRule", "Waymark: Delete Rule"]);
     expect(manifest.contributes.menus["view/item/context"]).toContainEqual({
-      command: "trail.deleteRule",
-      when: "view == trail.projectMemory && viewItem == trailRule",
+      command: "waymark.deleteRule",
+      when: "view == waymark.projectMemory && viewItem == waymarkRule",
       group: "inline@2"
     });
-    expect(manifest.contributes.menus["trail.editorContext"]).toHaveLength(4);
+    expect(manifest.contributes.menus["waymark.editorContext"]).toHaveLength(4);
   });
 });
 
@@ -169,6 +212,10 @@ interface ExtensionManifest {
         readonly icon: string;
       }>;
     };
+    readonly views: Record<string, ReadonlyArray<{
+      readonly id: string;
+      readonly name: string;
+    }>>;
     readonly menus: Record<string, readonly Record<string, string>[]>;
   };
 }

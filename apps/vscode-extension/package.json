@@ -1,7 +1,7 @@
 {
   "name": "waymark",
   "displayName": "Waymark",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "Waymark-Dev",
   "description": "Keep AI-assisted development aligned with your project's rules and decisions.",
   "main": "./dist/extension.js",
@@ -13,171 +13,171 @@
     "Other"
   ],
   "activationEvents": [
-    "onView:trail.projectMemory",
-    "onCommand:trail.openProjectMemory",
-    "onCommand:trail.initializeProject",
-    "onCommand:trail.selectWorkspaceFolder",
-    "onCommand:trail.createConstitution",
-    "onCommand:trail.openConstitution",
-    "onCommand:trail.addRule",
-    "onCommand:trail.deleteRule",
-    "onCommand:trail.addDecision",
-    "onCommand:trail.importArchitectureDocument",
-    "onCommand:trail.showFutureFeature",
-    "onCommand:trail.refreshGitContext",
-    "onCommand:trail.openChangedFile",
-    "onCommand:trail.viewFileDiff",
-    "onCommand:trail.showCommitDetails",
-    "onCommand:trail.searchProjectMemory",
-    "onCommand:trail.refreshProjectMemory",
-    "onCommand:trail.showMemoryResultDetails",
-    "onCommand:trail.explainSelectedCode",
-    "onCommand:trail.showCodeContext",
-    "onCommand:trail.checkSelectedCode",
-    "onCommand:trail.checkCurrentChanges",
-    "onCommand:trail.showGuardianFinding",
-    "onCommand:trail.askAboutSelectedCode",
-    "onCommand:trail.showAiConfiguration"
+    "onView:waymark.projectMemory",
+    "onCommand:waymark.openProjectMemory",
+    "onCommand:waymark.initializeProject",
+    "onCommand:waymark.selectWorkspaceFolder",
+    "onCommand:waymark.createConstitution",
+    "onCommand:waymark.openConstitution",
+    "onCommand:waymark.addRule",
+    "onCommand:waymark.deleteRule",
+    "onCommand:waymark.addDecision",
+    "onCommand:waymark.importArchitectureDocument",
+    "onCommand:waymark.showFutureFeature",
+    "onCommand:waymark.refreshGitContext",
+    "onCommand:waymark.openChangedFile",
+    "onCommand:waymark.viewFileDiff",
+    "onCommand:waymark.showCommitDetails",
+    "onCommand:waymark.searchProjectMemory",
+    "onCommand:waymark.refreshProjectMemory",
+    "onCommand:waymark.showMemoryResultDetails",
+    "onCommand:waymark.explainSelectedCode",
+    "onCommand:waymark.showCodeContext",
+    "onCommand:waymark.checkSelectedCode",
+    "onCommand:waymark.checkCurrentChanges",
+    "onCommand:waymark.showGuardianFinding",
+    "onCommand:waymark.askAboutSelectedCode",
+    "onCommand:waymark.showAiConfiguration"
   ],
   "contributes": {
     "commands": [
       {
-        "command": "trail.openProjectMemory",
+        "command": "waymark.openProjectMemory",
         "title": "Waymark: Open Project Memory"
       },
       {
-        "command": "trail.initializeProject",
+        "command": "waymark.initializeProject",
         "title": "Waymark: Initialize Project"
       },
       {
-        "command": "trail.selectWorkspaceFolder",
+        "command": "waymark.selectWorkspaceFolder",
         "title": "Waymark: Select Workspace Folder"
       },
       {
-        "command": "trail.createConstitution",
+        "command": "waymark.createConstitution",
         "title": "Waymark: Create Constitution"
       },
       {
-        "command": "trail.openConstitution",
+        "command": "waymark.openConstitution",
         "title": "Waymark: Open Constitution"
       },
       {
-        "command": "trail.addRule",
+        "command": "waymark.addRule",
         "title": "Waymark: Add Rule"
       },
       {
-        "command": "trail.deleteRule",
+        "command": "waymark.deleteRule",
         "title": "Waymark: Delete Rule"
       },
       {
-        "command": "trail.addDecision",
+        "command": "waymark.addDecision",
         "title": "Waymark: Add Decision"
       },
       {
-        "command": "trail.importArchitectureDocument",
+        "command": "waymark.importArchitectureDocument",
         "title": "Waymark: Import Architecture Document"
       },
       {
-        "command": "trail.showFutureFeature",
+        "command": "waymark.showFutureFeature",
         "title": "Waymark: Show Future Feature"
       },
       {
-        "command": "trail.refreshGitContext",
+        "command": "waymark.refreshGitContext",
         "title": "Waymark: Refresh Git Context"
       },
       {
-        "command": "trail.openChangedFile",
+        "command": "waymark.openChangedFile",
         "title": "Waymark: Open Changed File"
       },
       {
-        "command": "trail.viewFileDiff",
+        "command": "waymark.viewFileDiff",
         "title": "Waymark: View File Diff"
       },
       {
-        "command": "trail.showCommitDetails",
+        "command": "waymark.showCommitDetails",
         "title": "Waymark: Show Commit Details"
       },
       {
-        "command": "trail.searchProjectMemory",
+        "command": "waymark.searchProjectMemory",
         "title": "Waymark: Search Project Memory"
       },
       {
-        "command": "trail.refreshProjectMemory",
+        "command": "waymark.refreshProjectMemory",
         "title": "Waymark: Refresh Project Memory"
       },
       {
-        "command": "trail.showMemoryResultDetails",
+        "command": "waymark.showMemoryResultDetails",
         "title": "Waymark: Show Memory Result Details"
       },
       {
-        "command": "trail.explainSelectedCode",
+        "command": "waymark.explainSelectedCode",
         "title": "Waymark: Explain Selected Code"
       },
       {
-        "command": "trail.showCodeContext",
+        "command": "waymark.showCodeContext",
         "title": "Waymark: Show Code Context"
       },
       {
-        "command": "trail.checkSelectedCode",
+        "command": "waymark.checkSelectedCode",
         "title": "Waymark: Check Against Project Rules"
       },
       {
-        "command": "trail.checkCurrentChanges",
+        "command": "waymark.checkCurrentChanges",
         "title": "Waymark: Check Current Changes"
       },
       {
-        "command": "trail.showGuardianFinding",
+        "command": "waymark.showGuardianFinding",
         "title": "Waymark: Show Guardian Finding"
       },
       {
-        "command": "trail.askAboutSelectedCode",
+        "command": "waymark.askAboutSelectedCode",
         "title": "Waymark: Ask About Selected Code"
       },
       {
-        "command": "trail.showAiConfiguration",
+        "command": "waymark.showAiConfiguration",
         "title": "Waymark: Show AI Configuration"
       }
     ],
     "submenus": [
       {
-        "id": "trail.editorContext",
+        "id": "waymark.editorContext",
         "label": "Waymark"
       }
     ],
     "menus": {
       "editor/context": [
         {
-          "submenu": "trail.editorContext",
+          "submenu": "waymark.editorContext",
           "when": "editorHasSelection",
           "group": "navigation@10"
         }
       ],
-      "trail.editorContext": [
+      "waymark.editorContext": [
         {
-          "command": "trail.explainSelectedCode",
+          "command": "waymark.explainSelectedCode",
           "when": "editorHasSelection",
           "group": "1_ai@1"
         },
         {
-          "command": "trail.askAboutSelectedCode",
+          "command": "waymark.askAboutSelectedCode",
           "when": "editorHasSelection",
           "group": "1_ai@2"
         },
         {
-          "command": "trail.checkSelectedCode",
+          "command": "waymark.checkSelectedCode",
           "when": "editorHasSelection",
           "group": "2_guardian@1"
         },
         {
-          "command": "trail.showCodeContext",
+          "command": "waymark.showCodeContext",
           "when": "editorHasSelection",
           "group": "3_context@1"
         }
       ],
       "view/item/context": [
         {
-          "command": "trail.deleteRule",
-          "when": "view == trail.projectMemory && viewItem == trailRule",
+          "command": "waymark.deleteRule",
+          "when": "view == waymark.projectMemory && viewItem == waymarkRule",
           "group": "inline@2"
         }
       ]
@@ -185,16 +185,16 @@
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "trail",
+          "id": "waymark",
           "title": "Waymark",
           "icon": "resources/waymark.svg"
         }
       ]
     },
     "views": {
-      "trail": [
+      "waymark": [
         {
-          "id": "trail.projectMemory",
+          "id": "waymark.projectMemory",
           "name": "Project Memory"
         }
       ]

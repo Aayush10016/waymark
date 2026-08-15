@@ -663,13 +663,13 @@ export class ProjectMemoryTreeDataProvider implements vscode.TreeDataProvider<Pr
     if (constitution.status === "missing") {
       return [
         textItem("Project Constitution not created yet."),
-        actionItem("Create Constitution", "trail.createConstitution")
+        actionItem("Create Constitution", "waymark.createConstitution")
       ];
     }
 
     return [
       textItem("$(pass) Constitution configured"),
-      actionItem("Open Constitution", "trail.openConstitution")
+      actionItem("Open Constitution", "waymark.openConstitution")
     ];
   }
 
@@ -686,12 +686,12 @@ export class ProjectMemoryTreeDataProvider implements vscode.TreeDataProvider<Pr
         title: "Open Rule",
         arguments: [vscode.Uri.file(rule.path)]
       };
-      item.contextValue = "trailRule";
+      item.contextValue = "waymarkRule";
       item.tooltip = `${rule.title}\n${rule.ruleText}\n${rule.path}`;
       return item;
     });
 
-    return [...items, actionItem("+ Add Rule", "trail.addRule")];
+    return [...items, actionItem("+ Add Rule", "waymark.addRule")];
   }
 
   private async decisionItems(folder: WorkspaceFolderInfo): Promise<ProjectMemoryTreeItem[]> {
@@ -707,7 +707,7 @@ export class ProjectMemoryTreeDataProvider implements vscode.TreeDataProvider<Pr
       return item;
     });
 
-    return [...items, actionItem("+ Add Decision", "trail.addDecision")];
+    return [...items, actionItem("+ Add Decision", "waymark.addDecision")];
   }
 
   private async gitItems(): Promise<ProjectMemoryTreeItem[]> {
@@ -749,7 +749,7 @@ export class ProjectMemoryTreeDataProvider implements vscode.TreeDataProvider<Pr
           textItem("Staged", summary.staged.toString()),
           textItem("Unstaged", summary.unstaged.toString()),
           textItem("Untracked", summary.untracked.toString()),
-          actionItem("Refresh", "trail.refreshGitContext"),
+          actionItem("Refresh", "waymark.refreshGitContext"),
           branchItem("Changed Files", `git-status:${JSON.stringify({ workspaceFolder: state.workspaceFolder, status: state.status })}`),
           branchItem("Recent Commits", `git-commits:${JSON.stringify(state.workspaceFolder)}`)
         ];
@@ -771,7 +771,7 @@ export class ProjectMemoryTreeDataProvider implements vscode.TreeDataProvider<Pr
     return commits.map((commit) => {
       const item = textItem(commit.subject, `${commit.shortSha} · ${commit.author} · ${commit.date}`);
       item.command = {
-        command: "trail.showCommitDetails",
+        command: "waymark.showCommitDetails",
         title: "Show Commit Details",
         arguments: [folder, commit.sha]
       };
@@ -822,8 +822,8 @@ export class ProjectMemoryTreeDataProvider implements vscode.TreeDataProvider<Pr
   private projectMemoryItems(): ProjectMemoryTreeItem[] {
     if (this.currentMemoryQuery.trim().length === 0) {
       return [
-        actionItem("Search project memory...", "trail.searchProjectMemory"),
-        actionItem("Import Architecture Document", "trail.importArchitectureDocument"),
+        actionItem("Search project memory...", "waymark.searchProjectMemory"),
+        actionItem("Import Architecture Document", "waymark.importArchitectureDocument"),
         textItem("Sources", "Constitution · Rules · Decisions · Git"),
         descriptionItem("Deterministic lexical retrieval only.")
       ];
@@ -831,18 +831,18 @@ export class ProjectMemoryTreeDataProvider implements vscode.TreeDataProvider<Pr
 
     if (this.currentMemoryResults.length === 0) {
       return [
-        actionItem("Search project memory...", "trail.searchProjectMemory"),
-        actionItem("Import Architecture Document", "trail.importArchitectureDocument"),
-        actionItem("Refresh Project Memory", "trail.refreshProjectMemory"),
+        actionItem("Search project memory...", "waymark.searchProjectMemory"),
+        actionItem("Import Architecture Document", "waymark.importArchitectureDocument"),
+        actionItem("Refresh Project Memory", "waymark.refreshProjectMemory"),
         textItem(`No project memory results found for: ${this.currentMemoryQuery}`),
         descriptionItem("Try another project term.")
       ];
     }
 
     return [
-      actionItem("Search project memory...", "trail.searchProjectMemory"),
-      actionItem("Import Architecture Document", "trail.importArchitectureDocument"),
-      actionItem("Refresh Project Memory", "trail.refreshProjectMemory"),
+      actionItem("Search project memory...", "waymark.searchProjectMemory"),
+      actionItem("Import Architecture Document", "waymark.importArchitectureDocument"),
+      actionItem("Refresh Project Memory", "waymark.refreshProjectMemory"),
       ...this.currentMemoryResults.map((result) => memoryResultItem(result))
     ];
   }
@@ -854,8 +854,8 @@ export class ProjectMemoryTreeDataProvider implements vscode.TreeDataProvider<Pr
 
     return [
       branchItem(findingsLabel, "guardian-findings"),
-      actionItem("Check Current Changes", "trail.checkCurrentChanges"),
-      actionItem("Check Selected Code", "trail.checkSelectedCode")
+      actionItem("Check Current Changes", "waymark.checkCurrentChanges"),
+      actionItem("Check Selected Code", "waymark.checkSelectedCode")
     ];
   }
 
@@ -875,9 +875,9 @@ export class ProjectMemoryTreeDataProvider implements vscode.TreeDataProvider<Pr
     const isReady = diagnostics.apiKeyStatus === "Configured" && diagnostics.modelStatus === "Configured";
 
     return [
-      actionItem("Explain Selected Code", "trail.explainSelectedCode"),
-      actionItem("Ask About Selected Code", "trail.askAboutSelectedCode"),
-      actionItem(`Status: ${isReady ? "Ready" : "Not configured"}`, "trail.showAiConfiguration"),
+      actionItem("Explain Selected Code", "waymark.explainSelectedCode"),
+      actionItem("Ask About Selected Code", "waymark.askAboutSelectedCode"),
+      actionItem(`Status: ${isReady ? "Ready" : "Not configured"}`, "waymark.showAiConfiguration"),
       descriptionItem(isReady ? `NVIDIA · ${diagnostics.model ?? "(missing model)"}` : "Set NVIDIA_API_KEY and NVIDIA_MODEL, then restart VS Code.")
     ];
   }
@@ -937,7 +937,7 @@ function descriptionItem(label: string): ProjectMemoryTreeItem {
 }
 
 function initializeItem(): ProjectMemoryTreeItem {
-  return actionItem("Initialize Project", "trail.initializeProject");
+  return actionItem("Initialize Project", "waymark.initializeProject");
 }
 
 function actionItem(label: string, command: string): ProjectMemoryTreeItem {
@@ -953,7 +953,7 @@ function guardianFindingItem(finding: GuardianFinding): ProjectMemoryTreeItem {
   const item = textItem(finding.ruleTitle, finding.matchedTerms.join(", "));
   item.tooltip = `${finding.title}\n${finding.message}\nRule: ${finding.rulePath}`;
   item.command = {
-    command: "trail.showGuardianFinding",
+    command: "waymark.showGuardianFinding",
     title: "Show Guardian Finding",
     arguments: [finding]
   };
@@ -963,7 +963,7 @@ function guardianFindingItem(finding: GuardianFinding): ProjectMemoryTreeItem {
 function memoryResultItem(result: ProjectMemorySearchResult): ProjectMemoryTreeItem {
   const item = textItem(result.document.title, `${result.document.sourceType} · ${result.document.workspaceFolder.name}`);
   item.command = {
-    command: "trail.showMemoryResultDetails",
+    command: "waymark.showMemoryResultDetails",
     title: "Show Memory Result Details",
     arguments: [result]
   };
@@ -1019,13 +1019,13 @@ function gitFileItem(workspaceFolder: WorkspaceFolderInfo, fileStatus: GitFileSt
     `${gitFileIcon(fileStatus)} ${fileStatus.path}`,
     undefined,
     vscode.TreeItemCollapsibleState.Collapsed,
-    [gitFileActionItem("View Diff", "trail.viewFileDiff", workspaceFolder, fileStatus)]
+    [gitFileActionItem("View Diff", "waymark.viewFileDiff", workspaceFolder, fileStatus)]
   );
   if (fileStatus.renamed && fileStatus.previousPath !== undefined) {
     item.description = `renamed from ${fileStatus.previousPath}`;
   }
   item.command = {
-    command: "trail.openChangedFile",
+    command: "waymark.openChangedFile",
     title: "Open Changed File",
     arguments: [workspaceFolder, fileStatus]
   };
@@ -1065,7 +1065,7 @@ function workspaceFolderItem(folder: WorkspaceFolderInfo): ProjectMemoryTreeItem
   const item = new ProjectMemoryTreeItem(folder.name);
   item.description = folder.fsPath;
   item.command = {
-    command: "trail.selectWorkspaceFolder",
+    command: "waymark.selectWorkspaceFolder",
     title: "Select Workspace Folder",
     arguments: [folder.fsPath]
   };

@@ -25,7 +25,7 @@ export class VsCodeAutomaticGuardian implements vscode.Disposable {
   public constructor(
     runner: AutomaticGuardianRunner,
     findingSink: GuardianFindingSink,
-    diagnosticCollection: vscode.DiagnosticCollection = vscode.languages.createDiagnosticCollection("trail-guardian")
+    diagnosticCollection: vscode.DiagnosticCollection = vscode.languages.createDiagnosticCollection("waymark-guardian")
   ) {
     this.runner = runner;
     this.findingSink = findingSink;
