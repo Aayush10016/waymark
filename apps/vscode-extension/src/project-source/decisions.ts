@@ -3,7 +3,7 @@ import { access, mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
 import { UserFacingError } from "../shared/errors";
-import { resolveWaymarkWorkspacePaths } from "../workspace/trail-paths";
+import { resolveProjectMemoryPaths } from "../workspace/project-memory-paths";
 import { parseHeadingSectionValue, parseMarkdownTitle, slugifyTitle, titleFromFileName } from "./markdown";
 
 import type { WorkspaceFolderInfo } from "../workspace/project-marker";
@@ -31,7 +31,7 @@ export interface DecisionCreationInput {
 
 export class DecisionStore {
   public async list(workspaceFolder: WorkspaceFolderInfo): Promise<readonly ArchitecturalDecision[]> {
-    const decisionsDirectory = resolveWaymarkWorkspacePaths(workspaceFolder).decisionsDirectoryPath;
+    const decisionsDirectory = resolveProjectMemoryPaths(workspaceFolder).decisionsDirectoryPath;
     if (!(await pathExists(decisionsDirectory))) {
       return [];
     }
@@ -55,7 +55,7 @@ export class DecisionStore {
 
   public async createFromInput(workspaceFolder: WorkspaceFolderInfo, input: DecisionCreationInput): Promise<ArchitecturalDecision> {
     const normalized = normalizeDecisionCreationInput(input);
-    const decisionsDirectory = resolveWaymarkWorkspacePaths(workspaceFolder).decisionsDirectoryPath;
+    const decisionsDirectory = resolveProjectMemoryPaths(workspaceFolder).decisionsDirectoryPath;
     await mkdir(decisionsDirectory, { recursive: true });
 
     const nextNumber = await this.nextDecisionNumber(decisionsDirectory);

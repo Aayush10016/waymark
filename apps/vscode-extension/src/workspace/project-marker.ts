@@ -4,9 +4,9 @@ import { dirname } from "node:path";
 import { randomUUID } from "node:crypto";
 
 import { UserFacingError } from "../shared/errors";
-import { resolveWaymarkWorkspacePaths } from "./trail-paths";
+import { canonicalProjectMemoryPaths, resolveProjectMemoryPaths } from "./project-memory-paths";
 
-export const TRAIL_PROJECT_SCHEMA_VERSION = 1;
+export const WAYMARK_PROJECT_SCHEMA_VERSION = 1;
 
 export interface WorkspaceFolderInfo {
   readonly name: string;
@@ -14,7 +14,7 @@ export interface WorkspaceFolderInfo {
 }
 
 export interface WaymarkProject {
-  readonly schemaVersion: typeof TRAIL_PROJECT_SCHEMA_VERSION;
+  readonly schemaVersion: typeof WAYMARK_PROJECT_SCHEMA_VERSION;
   readonly projectId: string;
   readonly name: string;
 }
@@ -43,7 +43,7 @@ export class ProjectMarkerStore {
   }
 
   public markerPath(workspaceFolder: WorkspaceFolderInfo): string {
-    return resolveWaymarkWorkspacePaths(workspaceFolder).projectMarkerPath;
+    return resolveProjectMemoryPaths(workspaceFolder).projectMarkerPath;
   }
 
   public async read(workspaceFolder: WorkspaceFolderInfo): Promise<ProjectMarkerReadResult> {
@@ -85,22 +85,23 @@ export class ProjectMarkerStore {
 
     if (current.status === "malformed") {
       throw new UserFacingError(
-        "Waymark cannot initialize this workspace because .trail/project.json already exists but is not valid JSON."
+        `Waymark cannot initialize this workspace because ${current.markerPath} already exists but is not valid JSON.`
       );
     }
 
     const project: WaymarkProject = {
-      schemaVersion: TRAIL_PROJECT_SCHEMA_VERSION,
+      schemaVersion: WAYMARK_PROJECT_SCHEMA_VERSION,
       projectId: this.createProjectId(),
       name: workspaceFolder.name
     };
 
-    await mkdir(dirname(current.markerPath), { recursive: true });
-    await mkdir(resolveWaymarkWorkspacePaths(workspaceFolder).rulesDirectoryPath, { recursive: true });
-    await mkdir(resolveWaymarkWorkspacePaths(workspaceFolder).decisionsDirectoryPath, { recursive: true });
+    const canonicalPaths = canonicalProjectMemoryPaths(workspaceFolder);
+    await mkdir(dirname(canonicalPaths.projectMarkerPath), { recursive: true });
+    await mkdir(canonicalPaths.rulesDirectoryPath, { recursive: true });
+    await mkdir(canonicalPaths.decisionsDirectoryPath, { recursive: true });
 
     try {
-      await writeFile(current.markerPath, `${JSON.stringify(project, null, 2)}\n`, {
+      await writeFile(canonicalPaths.projectMarkerPath, `${JSON.stringify(project, null, 2)}\n`, {
         encoding: "utf8",
         flag: "wx"
       });
@@ -124,7 +125,7 @@ function parseWaymarkProject(value: unknown): WaymarkProject {
     throw new UserFacingError("Waymark project marker must be a JSON object.");
   }
 
-  if (value.schemaVersion !== TRAIL_PROJECT_SCHEMA_VERSION) {
+  if (value.schemaVersion !== WAYMARK_PROJECT_SCHEMA_VERSION) {
     throw new UserFacingError("Waymark project marker uses an unsupported schema version.");
   }
 
@@ -137,7 +138,7 @@ function parseWaymarkProject(value: unknown): WaymarkProject {
   }
 
   return {
-    schemaVersion: TRAIL_PROJECT_SCHEMA_VERSION,
+    schemaVersion: WAYMARK_PROJECT_SCHEMA_VERSION,
     projectId: value.projectId,
     name: value.name
   };

@@ -205,7 +205,7 @@ function document(index: number): ProjectMemoryDocument {
     id: `doc-${index}`,
     sourceType: index % 2 === 0 ? "RULE" : "DECISION",
     title: `Auth evidence ${index}`,
-    path: `/workspace/backend/.trail/rules/auth-${index}.md`,
+    path: `/workspace/backend/.waymark/rules/auth-${index}.md`,
     content: "auth",
     metadata: {},
     updatedAt: "2026-08-11T00:00:00.000Z",

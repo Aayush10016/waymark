@@ -3,7 +3,7 @@ import { access, mkdir, readdir, readFile, unlink, writeFile } from "node:fs/pro
 import { join } from "node:path";
 
 import { UserFacingError } from "../shared/errors";
-import { resolveWaymarkWorkspacePaths } from "../workspace/trail-paths";
+import { resolveProjectMemoryPaths } from "../workspace/project-memory-paths";
 import { parseColonMetadata, parseMarkdownTitle, parseSectionText, slugifyTitle, titleFromFileName } from "./markdown";
 
 import type { WorkspaceFolderInfo } from "../workspace/project-marker";
@@ -42,7 +42,7 @@ export interface RuleCreationInput {
 
 export class RuleStore {
   public async list(workspaceFolder: WorkspaceFolderInfo): Promise<readonly ExplicitRule[]> {
-    const rulesDirectory = resolveWaymarkWorkspacePaths(workspaceFolder).rulesDirectoryPath;
+    const rulesDirectory = resolveProjectMemoryPaths(workspaceFolder).rulesDirectoryPath;
     if (!(await pathExists(rulesDirectory))) {
       return [];
     }
@@ -67,7 +67,7 @@ export class RuleStore {
 
   public async createFromInput(workspaceFolder: WorkspaceFolderInfo, input: RuleCreationInput): Promise<ExplicitRule> {
     const normalized = normalizeRuleCreationInput(input);
-    const rulesDirectory = resolveWaymarkWorkspacePaths(workspaceFolder).rulesDirectoryPath;
+    const rulesDirectory = resolveProjectMemoryPaths(workspaceFolder).rulesDirectoryPath;
     const fileName = await nextRuleFileName(rulesDirectory, slugifyTitle(normalized.title));
     const path = join(rulesDirectory, fileName);
 

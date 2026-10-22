@@ -62,7 +62,7 @@ describe("ProjectMemoryCollector", () => {
 
     await expect(repository.search("PostgreSQL", [workspace])).resolves.toHaveLength(4);
 
-    await writeFile(join(workspace.fsPath, ".trail", "constitution.md"), "# Project Constitution\n\nSQLite only\n", "utf8");
+    await writeFile(join(workspace.fsPath, ".waymark", "constitution.md"), "# Project Constitution\n\nSQLite only\n", "utf8");
     await repository.refresh([workspace]);
 
     await expect(repository.search("SQLite", [workspace])).resolves.toHaveLength(1);
@@ -75,8 +75,8 @@ describe("ProjectMemoryCollector", () => {
       new DeterministicMemoryRetriever()
     );
 
-    await writeFile(join(workspace.fsPath, ".trail", "rules", "api-contracts.md"), "# API Contracts\n", "utf8");
-    await writeFile(join(workspace.fsPath, ".trail", "decisions", "ADR-002-api-contracts.md"), "# ADR-002: API Contracts\n", "utf8");
+    await writeFile(join(workspace.fsPath, ".waymark", "rules", "api-contracts.md"), "# API Contracts\n", "utf8");
+    await writeFile(join(workspace.fsPath, ".waymark", "decisions", "ADR-002-api-contracts.md"), "# ADR-002: API Contracts\n", "utf8");
     await repository.refresh([workspace]);
 
     await expect(repository.search("contracts", [workspace])).resolves.toHaveLength(2);
@@ -97,7 +97,7 @@ describe("ProjectMemoryCollector", () => {
     await expect(repository.search("PaymentService", [workspace])).resolves.toHaveLength(2);
   });
 
-  it("does not scan source-tree files outside .trail", async () => {
+  it("does not scan source-tree files outside .waymark", async () => {
     const workspace = await createWorkspace("backend");
     await writeFile(join(workspace.fsPath, "SecretArchitecture.java"), "class SecretArchitecture {}", "utf8");
     const collector = new ProjectMemoryCollector(new FakeGitClient(), fixedNow);
@@ -106,22 +106,37 @@ describe("ProjectMemoryCollector", () => {
 
     expect(index.documents.some((document) => document.content.includes("SecretArchitecture"))).toBe(false);
   });
+
+  it("collects legacy .trail project memory when no canonical .waymark directory exists", async () => {
+    const workspace = await createWorkspace("backend", ".trail");
+    const collector = new ProjectMemoryCollector(new FakeGitClient(), fixedNow);
+
+    const index = await collector.collect([workspace]);
+
+    expect(index.documents.some((document) => document.path?.startsWith(join(workspace.fsPath, ".trail")))).toBe(true);
+    expect(index.documents.map((document) => document.sourceType)).toEqual(expect.arrayContaining([
+      "PROJECT",
+      "CONSTITUTION",
+      "RULE",
+      "DECISION"
+    ]));
+  });
 });
 
-async function createWorkspace(name: string): Promise<WorkspaceFolderInfo> {
+async function createWorkspace(name: string, directoryName: ".waymark" | ".trail" = ".waymark"): Promise<WorkspaceFolderInfo> {
   const root = await mkdtemp(join(tmpdir(), "trail-vscode-extension-"));
   tempRoots.push(root);
   const workspacePath = join(root, name);
-  await mkdir(join(workspacePath, ".trail", "rules"), { recursive: true });
-  await mkdir(join(workspacePath, ".trail", "decisions"), { recursive: true });
+  await mkdir(join(workspacePath, directoryName, "rules"), { recursive: true });
+  await mkdir(join(workspacePath, directoryName, "decisions"), { recursive: true });
   await writeFile(
-    join(workspacePath, ".trail", "project.json"),
+    join(workspacePath, directoryName, "project.json"),
     JSON.stringify({ schemaVersion: 1, projectId: `${name}-id`, name }, null, 2),
     "utf8"
   );
-  await writeFile(join(workspacePath, ".trail", "constitution.md"), "# Project Constitution\n\nPostgreSQL\n", "utf8");
-  await writeFile(join(workspacePath, ".trail", "rules", "database-policy.md"), "# Database Policy\n\nPostgreSQL\n", "utf8");
-  await writeFile(join(workspacePath, ".trail", "decisions", "ADR-001-use-postgresql.md"), "# ADR-001: Use PostgreSQL\n", "utf8");
+  await writeFile(join(workspacePath, directoryName, "constitution.md"), "# Project Constitution\n\nPostgreSQL\n", "utf8");
+  await writeFile(join(workspacePath, directoryName, "rules", "database-policy.md"), "# Database Policy\n\nPostgreSQL\n", "utf8");
+  await writeFile(join(workspacePath, directoryName, "decisions", "ADR-001-use-postgresql.md"), "# ADR-001: Use PostgreSQL\n", "utf8");
   return {
     name,
     fsPath: workspacePath

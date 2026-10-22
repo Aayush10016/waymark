@@ -69,17 +69,17 @@ The fastest selected-code workflow:
 
 ## Local project storage
 
-Waymark stores project memory in a local `.trail/` directory for compatibility with existing projects:
+Waymark stores project memory in a local `.waymark/` directory:
 
 ```text
-.trail/
+.waymark/
   project.json
   constitution.md
   rules/
   decisions/
 ```
 
-The `.trail/` directory name is intentional backward compatibility. It is not a branding error and should not be renamed without a migration plan.
+Existing projects that still use the previous `.trail/` format remain supported. Waymark can migrate them to `.waymark/` with explicit user approval.
 
 ## Core features
 
@@ -90,7 +90,7 @@ Create explicit local rules for architecture, security, dependencies, coding con
 Rules are stored under:
 
 ```text
-.trail/rules/
+.waymark/rules/
 ```
 
 ### Project Decisions
@@ -100,7 +100,7 @@ Record architectural decisions as local ADR-style Markdown files.
 Decisions are stored under:
 
 ```text
-.trail/decisions/
+.waymark/decisions/
 ```
 
 ### Guardian
@@ -113,10 +113,10 @@ Guardian is deterministic and local. It does not use AI and does not upload code
 
 Project Memory is rebuilt from local Markdown and bounded read-only Git metadata:
 
-- `.trail/project.json`
-- `.trail/constitution.md`
-- `.trail/rules/*.md`
-- `.trail/decisions/*.md`
+- `.waymark/project.json`
+- `.waymark/constitution.md`
+- `.waymark/rules/*.md`
+- `.waymark/decisions/*.md`
 - Git status and recent commit metadata
 
 Retrieval is deterministic lexical retrieval. Waymark does not use embeddings or vector search.
@@ -155,7 +155,8 @@ Windows PowerShell example:
 
 ```powershell
 [Environment]::SetEnvironmentVariable("NVIDIA_API_KEY", "YOUR_KEY", "User")
-[Environment]::SetEnvironmentVariable("NVIDIA_MODEL", "meta/llama-3.1-8b-instruct", "User")
+[Environment]::SetEnvironmentVariable("NVIDIA_MODEL", "nvidia/nemotron-3.5-lightning-30b-a3b", "User")
+[Environment]::SetEnvironmentVariable("NVIDIA_MAX_TOKENS", "4096", "User")
 ```
 
 Restart VS Code after changing user-level environment variables.
@@ -166,7 +167,7 @@ Optional overrides:
 [Environment]::SetEnvironmentVariable("NVIDIA_BASE_URL", "https://integrate.api.nvidia.com/v1", "User")
 [Environment]::SetEnvironmentVariable("NVIDIA_TIMEOUT_MS", "30000", "User")
 [Environment]::SetEnvironmentVariable("NVIDIA_MAX_RETRIES", "2", "User")
-[Environment]::SetEnvironmentVariable("NVIDIA_MAX_TOKENS", "900", "User")
+[Environment]::SetEnvironmentVariable("NVIDIA_MAX_TOKENS", "4096", "User")
 [Environment]::SetEnvironmentVariable("NVIDIA_TEMPERATURE", "0.2", "User")
 ```
 

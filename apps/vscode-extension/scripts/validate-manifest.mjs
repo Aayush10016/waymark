@@ -88,13 +88,14 @@ if (manifest.devDependencies?.["@vscode/vsce"] === undefined) {
   throw new Error("Missing local VSCE packaging dependency.");
 }
 
-if (manifest.version !== "0.1.1") {
-  throw new Error("Waymark package version must be 0.1.1 for the contribution ID migration release.");
+if (manifest.version !== "0.1.2") {
+  throw new Error("Waymark package version must be 0.1.2 for the storage migration release.");
 }
 
 const requiredCommands = new Set([
   "waymark.openProjectMemory",
   "waymark.initializeProject",
+  "waymark.migrateLegacyProjectMemory",
   "waymark.selectWorkspaceFolder",
   "waymark.createConstitution",
   "waymark.openConstitution",
@@ -202,6 +203,15 @@ const iconPath = containers.find((container) => container.id === "waymark")?.ico
 if (typeof iconPath !== "string" || !existsSync(join(extensionRoot, iconPath))) {
   throw new Error("Waymark Activity Bar icon is missing.");
 }
+if (iconPath !== "resources/waymark.svg") {
+  throw new Error("Waymark Activity Bar icon must reference resources/waymark.svg.");
+}
+if (iconPath.includes("trail.svg")) {
+  throw new Error("Waymark Activity Bar icon must not reference stale trail.svg.");
+}
+if (!isVsCodeCompatibleActivityBarSvg(readFileSync(join(extensionRoot, iconPath), "utf8"))) {
+  throw new Error("Waymark Activity Bar icon SVG is not compatible with VS Code Activity Bar constraints.");
+}
 
 function isPng(content) {
   return content.length > 24
@@ -220,4 +230,19 @@ function pngDimensions(content) {
     width: content.readUInt32BE(16),
     height: content.readUInt32BE(20)
   };
+}
+
+function isVsCodeCompatibleActivityBarSvg(content) {
+  const normalized = content.replace(/\s+/g, " ").trim();
+  return normalized.startsWith("<svg ")
+    && normalized.includes("xmlns=\"http://www.w3.org/2000/svg\"")
+    && /\bviewBox=["']0 0 24 24["']/u.test(normalized)
+    && /<path\b[^>]+\bd=["'][^"']+["']/iu.test(normalized)
+    && !/<script\b/iu.test(normalized)
+    && !/<style\b/iu.test(normalized)
+    && !/<image\b/iu.test(normalized)
+    && !/<foreignObject\b/iu.test(normalized)
+    && !/<(?:linearGradient|radialGradient|filter|mask|clipPath|animate)\b/iu.test(normalized)
+    && !/\b(?:href|xlink:href)\s*=\s*["'](?:https?:\/\/|data:)/iu.test(normalized)
+    && !/<rect\b[^>]*(?:width=["'](?:24|128)["'][^>]*height=["'](?:24|128)["']|height=["'](?:24|128)["'][^>]*width=["'](?:24|128)["'])[^>]*fill=(?!["']none["'])/iu.test(normalized);
 }

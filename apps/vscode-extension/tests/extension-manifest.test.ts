@@ -24,7 +24,7 @@ describe("VS Code extension manifest", () => {
       "governance",
       "nvidia"
     ]));
-    expect(manifest.version).toBe("0.1.1");
+    expect(manifest.version).toBe("0.1.2");
     expect(manifest.engines.vscode).toBe("^1.125.0");
     expect(manifest.main).toBe("./dist/extension.js");
     expect(manifest.icon).toBe("resources/waymark.png");
@@ -53,6 +53,29 @@ describe("VS Code extension manifest", () => {
     expect(activityBarContainer?.icon).toBe("resources/waymark.svg");
     expect(existsSync(join(process.cwd(), activityBarContainer?.icon ?? ""))).toBe(true);
     expect(existsSync(join(process.cwd(), "resources/waymark.png"))).toBe(true);
+  });
+
+  it("uses a packageable VS Code-compatible SVG for the Activity Bar icon", async () => {
+    const manifest = await readManifest();
+    const activityBarContainer = manifest.contributes.viewsContainers.activitybar.find(
+      (container) => container.id === "waymark"
+    );
+    const svgPath = activityBarContainer?.icon ?? "";
+    const svg = await readFile(join(process.cwd(), svgPath), "utf8");
+
+    expect(svgPath).toBe("resources/waymark.svg");
+    expect(existsSync(join(process.cwd(), svgPath))).toBe(true);
+    expect(svg).toContain("<svg");
+    expect(svg).toMatch(/\bviewBox=/u);
+    expect(svg).toMatch(/\bviewBox=["']0 0 24 24["']/u);
+    expect(svg).toMatch(/<path\b[^>]+\bd=["'][^"']+["']/iu);
+    expect(svg).not.toMatch(/<image\b/iu);
+    expect(svg).not.toMatch(/\bhref\s*=\s*["'](?:https?:\/\/|data:)/iu);
+    expect(svg).not.toMatch(/\bxlink:href\s*=\s*["'](?:https?:\/\/|data:)/iu);
+    expect(svg).not.toMatch(/<script\b/iu);
+    expect(svg).not.toMatch(/<style\b/iu);
+    expect(svg).not.toMatch(/<foreignObject\b/iu);
+    expect(svg).not.toMatch(/<(?:linearGradient|radialGradient|filter|mask|clipPath|animate)\b/iu);
   });
 
   it("uses Waymark-specific view and menu contribution IDs", async () => {
@@ -88,6 +111,7 @@ describe("VS Code extension manifest", () => {
     const commandIds = manifest.contributes.commands.map((command) => command.command);
 
     expect(commandIds.filter((command) => command === "waymark.explainSelectedCode")).toHaveLength(1);
+    expect(commandIds.filter((command) => command === "waymark.migrateLegacyProjectMemory")).toHaveLength(1);
     expect(commandIds.filter((command) => command === "waymark.askAboutSelectedCode")).toHaveLength(1);
     expect(commandIds.filter((command) => command === "waymark.showCodeContext")).toHaveLength(1);
     expect(commandIds.filter((command) => command === "waymark.checkSelectedCode")).toHaveLength(1);

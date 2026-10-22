@@ -305,7 +305,7 @@ function rule(overrides: Partial<ExplicitRule> = {}): ExplicitRule {
     ruleText: "Do not use MongoDB.",
     reason: "",
     source: "",
-    path: "/workspace/.trail/rules/rule.md",
+    path: "/workspace/.waymark/rules/rule.md",
     isActive: true,
     hasMetadataWarning: false,
     ...overrides
@@ -318,7 +318,7 @@ function decision(overrides: Partial<ArchitecturalDecision> = {}): Architectural
     title: "Decision",
     status: "Accepted",
     rawStatus: "Accepted",
-    path: "/workspace/.trail/decisions/ADR-001.md",
+    path: "/workspace/.waymark/decisions/ADR-001.md",
     hasMetadataWarning: false,
     ...overrides
   };
@@ -330,7 +330,7 @@ function memoryResult(overrides: Partial<ProjectMemorySearchResult> = {}): Proje
       id: "rule-memory",
       sourceType: "RULE",
       title: "No MongoDB",
-      path: "/workspace/.trail/rules/no-mongodb.md",
+      path: "/workspace/.waymark/rules/no-mongodb.md",
       content: "Do not use MongoDB.",
       metadata: {},
       updatedAt: "2026-08-11T00:00:00.000Z",

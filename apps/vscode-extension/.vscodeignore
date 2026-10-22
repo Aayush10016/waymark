@@ -13,6 +13,7 @@ vitest.config.ts
 *.vsix
 .vscode/**
 .trail/**
+.waymark/**
 .env
 .env.*
 *.log

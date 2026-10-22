@@ -232,7 +232,7 @@ function rule(overrides: Partial<ExplicitRule> = {}): ExplicitRule {
     ruleText: "Redis must not be used anywhere.",
     reason: "",
     source: "",
-    path: "/workspace/.trail/rules/no-redis.md",
+    path: "/workspace/.waymark/rules/no-redis.md",
     isActive: true,
     hasMetadataWarning: false,
     ...overrides

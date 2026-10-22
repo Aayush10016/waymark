@@ -115,7 +115,7 @@ function prompt(): GroundedPrompt {
         id: "RULE-NO-REDIS",
         sourceType: "RULE",
         title: "Redis is forbidden",
-        sourcePath: "/workspace/.trail/rules/no-redis.md",
+        sourcePath: "/workspace/.waymark/rules/no-redis.md",
         content: "Redis must not be used anywhere.",
         relevance: 90,
         workspaceFolder: workspace()

@@ -25,6 +25,7 @@ import { ConstitutionStore } from "./project-source/constitution";
 import { DecisionStore } from "./project-source/decisions";
 import { RuleStore } from "./project-source/rules";
 import { ProjectMemoryTreeDataProvider } from "./views/project-memory-tree";
+import { PROJECT_MEMORY_WATCH_PATTERN } from "./workspace/project-memory-paths";
 import { ProjectMarkerStore } from "./workspace/project-marker";
 import { WaymarkWorkspaceService } from "./workspace/workspace-state";
 
@@ -101,6 +102,9 @@ export function activate(context: vscode.ExtensionContext): void {
     }),
     vscode.commands.registerCommand("waymark.initializeProject", async () => {
       await projectMemoryView.initializeProject();
+    }),
+    vscode.commands.registerCommand("waymark.migrateLegacyProjectMemory", async () => {
+      await projectMemoryView.migrateLegacyProjectMemory();
     }),
     vscode.commands.registerCommand("waymark.selectWorkspaceFolder", (folderPath: string) => {
       projectMemoryView.selectWorkspaceFolder(folderPath);
@@ -179,7 +183,7 @@ export function activate(context: vscode.ExtensionContext): void {
   );
 
   for (const folder of vscode.workspace.workspaceFolders ?? []) {
-    const watcher = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(folder, ".trail/**"));
+    const watcher = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(folder, PROJECT_MEMORY_WATCH_PATTERN));
     context.subscriptions.push(
       watcher,
       watcher.onDidCreate(() => {

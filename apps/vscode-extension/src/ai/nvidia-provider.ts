@@ -211,6 +211,9 @@ function parseCompletionText(payload: unknown): string {
 }
 
 function errorForStatus(status: number): AiProviderError {
+  if (status === 404 || status === 410) {
+    return new AiProviderError("MODEL_UNAVAILABLE", "Waymark AI model or endpoint is unavailable. Check NVIDIA_MODEL and NVIDIA_BASE_URL.");
+  }
   if (status === 401) {
     return new AiProviderError("AUTHENTICATION_FAILED", "Waymark AI authentication failed.");
   }

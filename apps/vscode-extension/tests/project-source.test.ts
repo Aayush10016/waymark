@@ -25,7 +25,7 @@ describe("ConstitutionStore", () => {
 
   it("detects an existing constitution", async () => {
     const workspace = await createWorkspace("example");
-    await writeFile(join(workspace.fsPath, ".trail", "constitution.md"), "# Project Constitution\n", "utf8");
+    await writeFile(join(workspace.fsPath, ".waymark", "constitution.md"), "# Project Constitution\n", "utf8");
     const store = new ConstitutionStore();
 
     await expect(store.read(workspace)).resolves.toMatchObject({
@@ -55,7 +55,7 @@ describe("ConstitutionStore", () => {
 
   it("never overwrites an existing constitution", async () => {
     const workspace = await createWorkspace("example");
-    const constitutionPath = join(workspace.fsPath, ".trail", "constitution.md");
+    const constitutionPath = join(workspace.fsPath, ".waymark", "constitution.md");
     await writeFile(constitutionPath, "# Custom Constitution\n\nDeveloper text.\n", "utf8");
     const store = new ConstitutionStore();
 
@@ -66,7 +66,7 @@ describe("ConstitutionStore", () => {
 
   it("handles arbitrary constitution Markdown safely", async () => {
     const workspace = await createWorkspace("example");
-    await writeFile(join(workspace.fsPath, ".trail", "constitution.md"), "not structured markdown", "utf8");
+    await writeFile(join(workspace.fsPath, ".waymark", "constitution.md"), "not structured markdown", "utf8");
     const store = new ConstitutionStore();
 
     await expect(store.read(workspace)).resolves.toMatchObject({
@@ -88,7 +88,7 @@ describe("RuleStore", () => {
   it("detects a rules directory and lists Markdown rules", async () => {
     const workspace = await createWorkspace("example");
     await writeFile(
-      join(workspace.fsPath, ".trail", "rules", "no-redis.md"),
+      join(workspace.fsPath, ".waymark", "rules", "no-redis.md"),
       "# No Redis\n\nStatus: active\nType: architecture\nScope: project-wide\n\n## Rule\n\nDo not add Redis.\n\n## Reason\n\nKeep infrastructure simple.\n\n## Source\n\nProject Constitution\n",
       "utf8"
     );
@@ -153,7 +153,7 @@ describe("RuleStore", () => {
 
   it("uses duplicate-safe filenames and preserves existing rules", async () => {
     const workspace = await createWorkspace("example");
-    const rulePath = join(workspace.fsPath, ".trail", "rules", "no-redis.md");
+    const rulePath = join(workspace.fsPath, ".waymark", "rules", "no-redis.md");
     await writeFile(rulePath, "# Existing\n", "utf8");
     const store = new RuleStore();
 
@@ -189,7 +189,7 @@ describe("RuleStore", () => {
 
   it("handles malformed rule metadata safely", async () => {
     const workspace = await createWorkspace("example");
-    await writeFile(join(workspace.fsPath, ".trail", "rules", "broken.md"), "Status: maybe\nType: unusual\n", "utf8");
+    await writeFile(join(workspace.fsPath, ".waymark", "rules", "broken.md"), "Status: maybe\nType: unusual\n", "utf8");
     const store = new RuleStore();
 
     await expect(store.list(workspace)).resolves.toMatchObject([
@@ -205,7 +205,7 @@ describe("RuleStore", () => {
   it("does not treat deprecated rules as active", async () => {
     const workspace = await createWorkspace("example");
     await writeFile(
-      join(workspace.fsPath, ".trail", "rules", "old-rule.md"),
+      join(workspace.fsPath, ".waymark", "rules", "old-rule.md"),
       "# Old Rule\n\nStatus: deprecated\nType: process\n",
       "utf8"
     );
@@ -233,7 +233,7 @@ describe("DecisionStore", () => {
   it("detects a decisions directory and lists Markdown decisions", async () => {
     const workspace = await createWorkspace("example");
     await writeFile(
-      join(workspace.fsPath, ".trail", "decisions", "ADR-001-use-postgresql.md"),
+      join(workspace.fsPath, ".waymark", "decisions", "ADR-001-use-postgresql.md"),
       "# ADR-001: Use PostgreSQL\n\n## Status\n\nAccepted\n\n## Context\n\nNeeded persistence.\n",
       "utf8"
     );
@@ -284,8 +284,8 @@ describe("DecisionStore", () => {
 
   it("avoids ADR numbering collisions instead of relying on file count", async () => {
     const workspace = await createWorkspace("example");
-    await writeFile(join(workspace.fsPath, ".trail", "decisions", "ADR-001-first.md"), "# ADR-001: First\n", "utf8");
-    await writeFile(join(workspace.fsPath, ".trail", "decisions", "ADR-003-third.md"), "# ADR-003: Third\n", "utf8");
+    await writeFile(join(workspace.fsPath, ".waymark", "decisions", "ADR-001-first.md"), "# ADR-001: First\n", "utf8");
+    await writeFile(join(workspace.fsPath, ".waymark", "decisions", "ADR-003-third.md"), "# ADR-003: Third\n", "utf8");
     const store = new DecisionStore();
 
     const decision = await store.create(workspace, "Second");
@@ -295,7 +295,7 @@ describe("DecisionStore", () => {
 
   it("never overwrites existing decision files when the same title is created again", async () => {
     const workspace = await createWorkspace("example");
-    const decisionPath = join(workspace.fsPath, ".trail", "decisions", "ADR-001-use-postgresql.md");
+    const decisionPath = join(workspace.fsPath, ".waymark", "decisions", "ADR-001-use-postgresql.md");
     await writeFile(decisionPath, "# Existing\n", "utf8");
     const store = new DecisionStore();
 
@@ -307,7 +307,7 @@ describe("DecisionStore", () => {
 
   it("handles malformed decision metadata safely", async () => {
     const workspace = await createWorkspace("example");
-    await writeFile(join(workspace.fsPath, ".trail", "decisions", "ADR-001-broken.md"), "# Broken\n", "utf8");
+    await writeFile(join(workspace.fsPath, ".waymark", "decisions", "ADR-001-broken.md"), "# Broken\n", "utf8");
     const store = new DecisionStore();
 
     await expect(store.list(workspace)).resolves.toMatchObject([
@@ -322,6 +322,40 @@ describe("DecisionStore", () => {
 
 describe("Project initialization compatibility", () => {
   afterEach(cleanup);
+
+  it("loads constitution, rules, and decisions from legacy .trail project memory", async () => {
+    const workspace = await createWorkspace("example", false);
+    await mkdir(join(workspace.fsPath, ".trail", "rules"), { recursive: true });
+    await mkdir(join(workspace.fsPath, ".trail", "decisions"), { recursive: true });
+    await writeFile(join(workspace.fsPath, ".trail", "constitution.md"), "# Project Constitution\n", "utf8");
+    await writeFile(
+      join(workspace.fsPath, ".trail", "rules", "no-redis.md"),
+      "# No Redis\n\nStatus: active\nType: architecture\n\n## Rule\n\nDo not add Redis.\n",
+      "utf8"
+    );
+    await writeFile(
+      join(workspace.fsPath, ".trail", "decisions", "ADR-001-use-postgresql.md"),
+      "# ADR-001: Use PostgreSQL\n\n## Status\n\nAccepted\n",
+      "utf8"
+    );
+
+    await expect(new ConstitutionStore().read(workspace)).resolves.toMatchObject({
+      status: "configured",
+      path: join(workspace.fsPath, ".trail", "constitution.md")
+    });
+    await expect(new RuleStore().list(workspace)).resolves.toMatchObject([
+      {
+        id: "no-redis",
+        title: "No Redis"
+      }
+    ]);
+    await expect(new DecisionStore().list(workspace)).resolves.toMatchObject([
+      {
+        id: "ADR-001-use-postgresql",
+        title: "ADR-001: Use PostgreSQL"
+      }
+    ]);
+  });
 
   it("keeps an existing project marker stable while adding source-of-truth folders", async () => {
     const workspace = await createWorkspace("example", false);
@@ -342,8 +376,8 @@ describe("Project initialization compatibility", () => {
 
   it("does not overwrite existing user files during project initialization", async () => {
     const workspace = await createWorkspace("example");
-    const rulePath = join(workspace.fsPath, ".trail", "rules", "existing.md");
-    const decisionPath = join(workspace.fsPath, ".trail", "decisions", "existing.md");
+    const rulePath = join(workspace.fsPath, ".waymark", "rules", "existing.md");
+    const decisionPath = join(workspace.fsPath, ".waymark", "decisions", "existing.md");
     await writeFile(rulePath, "# Existing Rule\n", "utf8");
     await writeFile(decisionPath, "# Existing Decision\n", "utf8");
 
@@ -363,8 +397,8 @@ async function createWorkspace(
   const workspacePath = join(root, name);
   await mkdir(workspacePath, { recursive: true });
   if (createWaymarkSubdirectories) {
-    await mkdir(join(workspacePath, ".trail", "rules"), { recursive: true });
-    await mkdir(join(workspacePath, ".trail", "decisions"), { recursive: true });
+    await mkdir(join(workspacePath, ".waymark", "rules"), { recursive: true });
+    await mkdir(join(workspacePath, ".waymark", "decisions"), { recursive: true });
   }
   return {
     name,

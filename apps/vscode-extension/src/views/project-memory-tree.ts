@@ -89,6 +89,31 @@ export class ProjectMemoryTreeDataProvider implements vscode.TreeDataProvider<Pr
     }
   }
 
+  public async migrateLegacyProjectMemory(): Promise<void> {
+    const selectedFolder = await this.resolveWorkspaceFolder("Select a workspace folder to migrate to .waymark");
+    if (selectedFolder === undefined) {
+      return;
+    }
+
+    const confirmation = await vscode.window.showWarningMessage(
+      "Legacy .trail project memory found. Migrate to .waymark?",
+      { modal: true },
+      "Migrate to .waymark"
+    );
+    if (confirmation !== "Migrate to .waymark") {
+      return;
+    }
+
+    try {
+      await this.workspaceService.migrateLegacyProjectMemory(getWorkspaceFolders(), selectedFolder.fsPath);
+      this.selectedFolderPath = selectedFolder.fsPath;
+      this.refresh();
+      await vscode.window.showInformationMessage("Migrated legacy .trail project memory to .waymark. The .trail directory was left unchanged.");
+    } catch (error) {
+      await showSafeError(error, "Waymark could not migrate legacy project memory.");
+    }
+  }
+
   public async createConstitution(): Promise<void> {
     const folder = await this.requireInitializedWorkspaceFolder();
     if (folder === undefined) {
@@ -577,7 +602,7 @@ export class ProjectMemoryTreeDataProvider implements vscode.TreeDataProvider<Pr
       case "malformedProject":
         return [
           sectionItem("PROJECT", "project"),
-          textItem("$(warning) Invalid .trail/project.json"),
+          textItem(`$(warning) Invalid ${state.projectMemoryDirectoryFormat === "legacy" ? ".trail" : ".waymark"}/project.json`),
           descriptionItem(state.reason)
         ];
       case "notInitialized":
@@ -650,12 +675,20 @@ export class ProjectMemoryTreeDataProvider implements vscode.TreeDataProvider<Pr
   }
 
   private projectItems(state: Extract<WaymarkWorkspaceState, { readonly kind: "initialized" }>): ProjectMemoryTreeItem[] {
-    return [
+    const items = [
       textItem("Overview", `Project: ${state.project.name}`),
+      textItem(
+        "Project Memory Directory",
+        state.projectMemoryDirectoryFormat === "legacy" ? "Legacy .trail/" : "Canonical .waymark/"
+      ),
       branchItem("Constitution", "constitution"),
       branchItem("Rules", "rules"),
       branchItem("Decisions", "decisions")
     ];
+    if (state.projectMemoryDirectoryFormat === "legacy") {
+      items.push(actionItem("Migrate to .waymark", "waymark.migrateLegacyProjectMemory"));
+    }
+    return items;
   }
 
   private async constitutionItems(folder: WorkspaceFolderInfo): Promise<ProjectMemoryTreeItem[]> {
@@ -906,7 +939,7 @@ export class ProjectMemoryTreeItem extends vscode.TreeItem {
 function notInitializedItems(): ProjectMemoryTreeItem[] {
   return [
     textItem("Not initialized"),
-    descriptionItem("Waymark uses a local .trail directory for constitution, rules, decisions, and memory."),
+    descriptionItem("Waymark uses a local .waymark directory for constitution, rules, decisions, and memory."),
     descriptionItem("This workspace has not been initialized with Waymark."),
     initializeItem()
   ];

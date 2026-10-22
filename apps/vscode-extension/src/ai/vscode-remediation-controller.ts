@@ -261,6 +261,8 @@ function toSafeRemediationMessage(error: unknown, configuration: NvidiaProviderC
       return "Waymark AI remediation is not configured. Set NVIDIA_API_KEY in your local environment before launching VS Code.";
     case "MISSING_MODEL":
       return "Waymark AI remediation model is not configured. Set NVIDIA_MODEL in your local environment before launching VS Code.";
+    case "MODEL_UNAVAILABLE":
+      return "Waymark AI model or endpoint is unavailable. Check NVIDIA_MODEL and NVIDIA_BASE_URL against NVIDIA Build, then restart VS Code. No files were modified.";
     case "RATE_LIMITED":
       return "Waymark AI remediation is temporarily rate limited. Try again shortly.";
     case "NETWORK":

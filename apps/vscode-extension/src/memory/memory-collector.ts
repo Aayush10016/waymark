@@ -3,7 +3,7 @@ import { access, readFile, readdir, stat } from "node:fs/promises";
 import { basename, join, relative } from "node:path";
 
 import { GitReadError } from "../git/git-client";
-import { resolveWaymarkWorkspacePaths } from "../workspace/trail-paths";
+import { resolveProjectMemoryPaths } from "../workspace/project-memory-paths";
 
 import type { GitClient } from "../git/git-client";
 import type { GitFileStatus } from "../git/models";
@@ -35,7 +35,7 @@ export class ProjectMemoryCollector {
   }
 
   private async collectWaymarkFiles(workspaceFolder: WorkspaceFolderInfo): Promise<readonly ProjectMemoryDocument[]> {
-    const paths = resolveWaymarkWorkspacePaths(workspaceFolder);
+    const paths = resolveProjectMemoryPaths(workspaceFolder);
     const documents: ProjectMemoryDocument[] = [];
 
     documents.push(

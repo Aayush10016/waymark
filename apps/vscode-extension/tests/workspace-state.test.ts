@@ -36,7 +36,7 @@ describe("WaymarkWorkspaceService", () => {
   it("returns initialized state for a single-root workspace with a valid marker", async () => {
     const workspace = await createWorkspace("example");
     await writeFile(
-      join(workspace.fsPath, ".trail", "project.json"),
+      join(workspace.fsPath, ".waymark", "project.json"),
       JSON.stringify({ schemaVersion: 1, projectId: "existing-id", name: "example" }),
       "utf8"
     );
@@ -101,7 +101,7 @@ describe("WaymarkWorkspaceService", () => {
 
   it("returns malformed state for invalid JSON", async () => {
     const workspace = await createWorkspace("example");
-    await writeFile(join(workspace.fsPath, ".trail", "project.json"), "{", "utf8");
+    await writeFile(join(workspace.fsPath, ".waymark", "project.json"), "{", "utf8");
     const service = new WaymarkWorkspaceService(new ProjectMarkerStore(() => "project-1"));
 
     await expect(service.getState([workspace])).resolves.toMatchObject({
@@ -114,7 +114,7 @@ async function createWorkspace(name: string): Promise<{ readonly name: string; r
   const root = await mkdtemp(join(tmpdir(), "trail-vscode-extension-"));
   tempRoots.push(root);
   const workspacePath = join(root, name);
-  await import("node:fs/promises").then(({ mkdir }) => mkdir(join(workspacePath, ".trail"), { recursive: true }));
+  await import("node:fs/promises").then(({ mkdir }) => mkdir(join(workspacePath, ".waymark"), { recursive: true }));
   return {
     name,
     fsPath: workspacePath

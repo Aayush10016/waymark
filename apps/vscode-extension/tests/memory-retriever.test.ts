@@ -25,7 +25,7 @@ describe("DeterministicMemoryRetriever", () => {
       document({
         sourceType: "DECISION",
         title: "ADR-001: Use PostgreSQL",
-        path: "/backend/.trail/decisions/ADR-001-use-postgresql.md",
+        path: "/backend/.waymark/decisions/ADR-001-use-postgresql.md",
         content: "Database decision",
         metadata: { database: "PostgreSQL" }
       })
@@ -88,7 +88,7 @@ function document(overrides: Partial<ProjectMemoryDocument>): ProjectMemoryDocum
     id: "doc",
     sourceType: "RULE" satisfies ProjectMemorySourceType,
     title: "Document",
-    path: "/backend/.trail/rules/document.md",
+    path: "/backend/.waymark/rules/document.md",
     content: "",
     metadata: {},
     updatedAt: "2026-08-11T00:00:00.000Z",

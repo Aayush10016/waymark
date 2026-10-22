@@ -138,7 +138,7 @@ function finding(overrides: Partial<GuardianFinding> = {}): GuardianFinding {
     message: "Redis is forbidden by project rules.",
     ruleId: "no-redis",
     ruleTitle: "Redis is not allowed",
-    rulePath: "/workspace/.trail/rules/no-redis.md",
+    rulePath: "/workspace/.waymark/rules/no-redis.md",
     matchedTerms: ["RedisTemplate"],
     evidence: [],
     source: "AUTOMATIC_FILE_CHANGE",

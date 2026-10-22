@@ -1,7 +1,7 @@
 {
   "name": "waymark",
   "displayName": "Waymark",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "publisher": "Waymark-Dev",
   "description": "Keep AI-assisted development aligned with your project's rules and decisions.",
   "main": "./dist/extension.js",
@@ -16,6 +16,7 @@
     "onView:waymark.projectMemory",
     "onCommand:waymark.openProjectMemory",
     "onCommand:waymark.initializeProject",
+    "onCommand:waymark.migrateLegacyProjectMemory",
     "onCommand:waymark.selectWorkspaceFolder",
     "onCommand:waymark.createConstitution",
     "onCommand:waymark.openConstitution",
@@ -48,6 +49,10 @@
       {
         "command": "waymark.initializeProject",
         "title": "Waymark: Initialize Project"
+      },
+      {
+        "command": "waymark.migrateLegacyProjectMemory",
+        "title": "Waymark: Migrate Legacy Project Memory"
       },
       {
         "command": "waymark.selectWorkspaceFolder",

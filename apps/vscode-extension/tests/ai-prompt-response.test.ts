@@ -33,7 +33,7 @@ describe("GroundedPromptBuilder", () => {
         message: "Direct JWT validation bypasses AuthService.",
         ruleId: "auth",
         ruleTitle: "Authentication must go through AuthService",
-        rulePath: "/workspace/.trail/rules/auth.md",
+        rulePath: "/workspace/.waymark/rules/auth.md",
         matchedTerms: ["jwt"],
         evidence: [],
         source: "SELECTED_CODE",

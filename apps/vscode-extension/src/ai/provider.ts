@@ -1,6 +1,7 @@
 export type AiProviderErrorCode =
   | "MISSING_API_KEY"
   | "MISSING_MODEL"
+  | "MODEL_UNAVAILABLE"
   | "AUTHENTICATION_FAILED"
   | "FORBIDDEN"
   | "RATE_LIMITED"

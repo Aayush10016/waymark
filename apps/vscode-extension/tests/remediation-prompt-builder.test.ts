@@ -97,13 +97,13 @@ function finding(): GuardianFinding {
     message: "Redis is forbidden in backend code.",
     ruleId: "no-redis",
     ruleTitle: "Redis is forbidden",
-    rulePath: "/workspace/.trail/rules/no-redis.md",
+    rulePath: "/workspace/.waymark/rules/no-redis.md",
     matchedTerms: ["RedisTemplate"],
     evidence: [{
       kind: "RULE",
       title: "Redis is forbidden",
       detail: "Redis must not be used anywhere in the backend.",
-      path: "/workspace/.trail/rules/no-redis.md"
+      path: "/workspace/.waymark/rules/no-redis.md"
     }],
     source: "AUTOMATIC_FILE_CHANGE",
     workspaceFolder: workspace(),
@@ -116,7 +116,7 @@ function evidence(overrides: Partial<AiEvidence> = {}): AiEvidence {
     id: "EVIDENCE",
     sourceType: "RULE",
     title: "Evidence",
-    sourcePath: "/workspace/.trail/rules/evidence.md",
+    sourcePath: "/workspace/.waymark/rules/evidence.md",
     content: "Evidence content",
     relevance: 100,
     workspaceFolder: workspace(),

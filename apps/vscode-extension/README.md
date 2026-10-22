@@ -1,193 +1,408 @@
 # Waymark
 
-Waymark keeps AI-assisted development aligned with your project's explicit engineering rules and decisions. It maintains local project truth, checks code changes with a deterministic Guardian, and can optionally provide grounded NVIDIA AI assistance when you ask for it.
+Keep AI-assisted development aligned with your project's rules, decisions, and engineering constraints.
+
+AI coding agents can make large changes quickly. They do not automatically know every project-specific engineering rule, architecture decision, dependency constraint, or security requirement. Waymark keeps those constraints inside the project and independently checks relevant changed code using a deterministic Guardian.
+
+Core idea:
+
+```text
+AI agents make changes.
+Waymark checks whether those changes follow the project's explicit rules.
+```
+
+Waymark helps detect project-rule violations introduced by AI-assisted code changes.
 
 ## Why Waymark?
 
-AI coding agents can make large changes quickly, but they do not automatically know the engineering constraints your project has agreed to follow.
-
-Waymark keeps those constraints visible inside VS Code. You define rules and decisions in plain Markdown, then Waymark checks relevant changed code against those explicit project requirements.
-
-The goal is simple: AI agents can make changes, but Waymark continuously helps you see whether those changes still follow the project's path.
-
-## Features
-
-### Project Rules
-
-Create and maintain explicit project rules such as required architecture boundaries, forbidden dependencies, security requirements, and coding conventions.
-
-Rules are stored locally as Markdown files under `.trail/rules/`. The `.trail/` directory is the current local project-memory format.
-
-### Project Decisions
-
-Record architectural decisions as local ADR-style Markdown files under `.trail/decisions/`.
-
-Waymark can list, create, open, and use accepted decisions as supporting evidence when checking code.
-
-### Automatic Guardian
-
-Waymark watches relevant changed files and runs deterministic rule checks locally.
-
-Guardian does not use AI. It does not upload code. It reports potential project-rule conflicts with evidence from explicit rules, decisions, selected code, and changed-file context.
-
-### Project Memory
-
-Waymark builds an in-memory, rebuildable Project Memory from:
-
-- `.trail/project.json`
-- `.trail/constitution.md`
-- `.trail/rules/*.md`
-- `.trail/decisions/*.md`
-- bounded read-only Git metadata
-
-Project Memory uses deterministic lexical retrieval. It does not use embeddings, vector search, or repository-wide source indexing.
-
-### Code Context
-
-Waymark can prepare a local context package for selected code. The context includes the selection, bounded surrounding code, file metadata, relevant Project Memory evidence, and read-only Git evidence.
-
-Use `Waymark: Show Code Context` to inspect what Waymark knows before using AI.
-
-### Grounded AI assistance
-
-Waymark can send an explicit selected-code request to a configured NVIDIA-hosted model.
-
-AI requests are user-triggered only. Waymark does not run background AI, automatic AI, telemetry, analytics, embeddings, MCP, or repository-wide source scanning.
-
-### Safe AI remediation proposals
-
-For deterministic Guardian findings, Waymark can ask the configured NVIDIA model for a guarded remediation proposal.
-
-Remediation is a proposal only. Waymark does not automatically edit files. Any edit requires explicit user approval and is checked against file-change safety conditions before it is applied.
-
-## How it works
+AI-assisted development creates a specific review problem:
 
 ```text
-Project rules and decisions
-        ↓
-Code changes or selected code
-        ↓
-Deterministic Guardian
-        ↓
-Evidence-backed findings
-        ↓
-Optional grounded AI assistance
+AI agent
+-> changes many files
+-> developer must manually inspect whether project-specific rules were violated
 ```
 
-Guardian is deterministic and local. AI assistance is optional and explicit.
+Waymark adds an independent verification layer:
 
-## Getting started
+```text
+Project rules
+-> AI-assisted changes
+-> relevant changed files detected
+-> deterministic Guardian
+-> evidence-backed findings
+```
 
-1. Install Waymark.
+The result is a local, project-specific guardrail around AI-assisted development. Waymark reports potential conflicts against the rules and decisions you explicitly store in the repository.
+
+## Quick Start
+
+1. Install Waymark from the VS Code Marketplace.
 2. Open a project in VS Code.
 3. Run `Waymark: Initialize Project`.
-4. Create or import project rules.
-5. Add architectural decisions as they are made.
-6. Start coding, or use an AI coding agent.
-7. Waymark checks relevant changed files automatically and reports deterministic findings in VS Code diagnostics and the Waymark Activity Bar.
+4. Add project rules using `Waymark: Add Rule`.
+5. Add architectural decisions using `Waymark: Add Decision`.
+6. Start coding or use Codex, Copilot, or another AI coding agent.
+7. Waymark automatically checks relevant changed files.
+8. Review Guardian diagnostics when a rule conflict is found.
+9. Optionally configure NVIDIA AI for explicit AI assistance.
 
-The selected-code right-click menu is the fastest workflow:
+The core Waymark Guardian works without NVIDIA AI.
 
-1. Select code in the editor.
-2. Right-click.
-3. Open the `Waymark` submenu.
-4. Choose `Explain Selected Code`, `Ask About Selected Code`, `Check Against Project Rules`, or `Show Code Context`.
+## Automatic Guardian
 
-## Using Waymark with Codex or other coding agents
+Automatic Guardian is the core Waymark workflow.
 
-Waymark project truth is plain Markdown so coding agents can inspect it before changing code.
+It:
 
-When using Codex or another coding agent, instruct it to:
+- watches relevant changed files;
+- detects ordinary edits;
+- detects AI-agent edits;
+- checks active project rules;
+- runs locally;
+- is deterministic;
+- does not require NVIDIA;
+- does not upload source code;
+- does not perform repository-wide source indexing;
+- reports findings through VS Code diagnostics;
+- updates findings when files change;
+- does not automatically modify files;
+- does not automatically revert files.
 
-1. Read `.trail/constitution.md`.
-2. Read active `.trail/rules/*.md`.
-3. Read relevant `.trail/decisions/*.md`.
-4. Respect those constraints before changing code.
-5. Never invent or add new project rules without explicit user approval.
+Example project rule:
 
-Agent compliance is useful, but Guardian remains the deterministic local verification layer.
+```text
+Redis must not be used in the backend.
+```
 
-## NVIDIA AI setup
+An AI coding agent adds:
 
-Waymark AI features are optional. Local Project Memory, Guardian, rules, decisions, Git context, and Code Context continue to work without NVIDIA configuration.
+```java
+import org.springframework.data.redis.core.RedisTemplate;
+```
 
-Waymark reads NVIDIA configuration from the VS Code extension host process environment:
+Waymark detects the changed file and reports the rule conflict. The developer does not have to manually inspect every AI-modified file just to discover this kind of project-rule violation.
 
-- `NVIDIA_API_KEY`
-- `NVIDIA_MODEL`
+Guardian detects and reports. It does not automatically remove the violating code.
 
-Windows PowerShell user-level example:
+## Project Rules
+
+Project rules are explicit constraints for the repository. Use them for:
+
+- forbidden dependencies;
+- architecture boundaries;
+- security requirements;
+- coding conventions;
+- technology constraints.
+
+Rules are stored as Markdown under:
+
+```text
+.waymark/rules/
+```
+
+## Project Decisions
+
+Project decisions capture architectural choices and their rationale. They are stored as ADR-style Markdown files under:
+
+```text
+.waymark/decisions/
+```
+
+## Project Memory
+
+Project Memory is the local evidence base Waymark uses for search, context, and Guardian checks.
+
+It is built from:
+
+- `.waymark/project.json`
+- `.waymark/constitution.md`
+- `.waymark/rules/*.md`
+- `.waymark/decisions/*.md`
+- bounded read-only Git metadata
+
+Project Memory is:
+
+- local;
+- rebuildable;
+- deterministic;
+- lexical.
+
+It does not use embeddings, vector search, or repository-wide source indexing.
+
+## Project Memory Directory
+
+Waymark stores project rules, architectural decisions, constitution data, and project memory in:
+
+```text
+.waymark/
+├── project.json
+├── constitution.md
+├── rules/
+└── decisions/
+```
+
+### Legacy Projects
+
+Older Waymark projects may use `.trail/`, the previous on-disk project-memory format.
+
+Waymark continues to support existing `.trail/` projects and can migrate them to `.waymark/` with explicit user approval.
+
+## Works Without AI
+
+You can use Waymark as a deterministic local engineering-governance tool without configuring NVIDIA AI.
+
+These features do not require NVIDIA:
+
+- Project Rules
+- Project Decisions
+- Project Memory
+- Automatic Guardian
+- Code Context
+- Git context
+- VS Code diagnostics
+
+## Optional NVIDIA AI
+
+NVIDIA AI is optional. The core Guardian does not require NVIDIA.
+
+Users who want AI features must provide their own NVIDIA API key. Waymark does not provide a shared API key. You use a key associated with your own NVIDIA account.
+
+AI features include:
+
+- `Waymark: Explain Selected Code`
+- `Waymark: Ask About Selected Code`
+- AI remediation proposals
+
+### Create an NVIDIA API Key
+
+Official NVIDIA resources:
+
+- NVIDIA Build: <https://build.nvidia.com/>
+- NVIDIA API key management: <https://build.nvidia.com/settings/api-keys>
+- NVIDIA NIM LLM API reference: <https://docs.api.nvidia.com/nim/reference/llm-apis>
+
+Setup:
+
+1. Open NVIDIA Build.
+2. Sign in or create an NVIDIA account.
+3. Open NVIDIA's API key management page.
+4. Generate an API key using NVIDIA's current interface.
+5. Copy the API key securely.
+6. Keep the key private.
+7. Never commit the key to Git.
+8. Never place the key directly in source code.
+
+### Configure NVIDIA on Windows
+
+Use PowerShell:
 
 ```powershell
 [Environment]::SetEnvironmentVariable(
     "NVIDIA_API_KEY",
-    "YOUR_KEY",
+    "YOUR_NVIDIA_API_KEY",
     "User"
 )
 
 [Environment]::SetEnvironmentVariable(
     "NVIDIA_MODEL",
-    "meta/llama-3.1-8b-instruct",
+    "nvidia/nemotron-3.5-lightning-30b-a3b",
     "User"
 )
 ```
 
-Optional overrides:
+Replace `YOUR_NVIDIA_API_KEY` with the real key. Never commit it. Never put it in source code. Never expose it in screenshots or logs.
+
+Optional settings:
 
 ```powershell
-[Environment]::SetEnvironmentVariable("NVIDIA_BASE_URL", "https://integrate.api.nvidia.com/v1", "User")
-[Environment]::SetEnvironmentVariable("NVIDIA_TIMEOUT_MS", "30000", "User")
-[Environment]::SetEnvironmentVariable("NVIDIA_MAX_RETRIES", "2", "User")
-[Environment]::SetEnvironmentVariable("NVIDIA_MAX_TOKENS", "900", "User")
-[Environment]::SetEnvironmentVariable("NVIDIA_TEMPERATURE", "0.2", "User")
+[Environment]::SetEnvironmentVariable(
+    "NVIDIA_BASE_URL",
+    "https://integrate.api.nvidia.com/v1",
+    "User"
+)
+
+[Environment]::SetEnvironmentVariable(
+    "NVIDIA_TIMEOUT_MS",
+    "30000",
+    "User"
+)
+
+[Environment]::SetEnvironmentVariable(
+    "NVIDIA_MAX_RETRIES",
+    "2",
+    "User"
+)
+
+[Environment]::SetEnvironmentVariable(
+    "NVIDIA_MAX_TOKENS",
+    "4096",
+    "User"
+)
+
+[Environment]::SetEnvironmentVariable(
+    "NVIDIA_TEMPERATURE",
+    "0.2",
+    "User"
+)
 ```
 
-Restart VS Code after changing user-level environment variables so the extension host process can see them.
+Model availability changes. Select a currently available model in NVIDIA Build. The model above was tested with a 4096-token output budget; reasoning models may truncate answers with the default 900-token budget, so set `NVIDIA_MAX_TOKENS` to `4096` for this example. An HTTP 404 or 410 means the model or endpoint is unavailable; verify both `NVIDIA_MODEL` and `NVIDIA_BASE_URL`.
 
-Never paste an API key into source code. Never commit an API key to the repository. Waymark does not persist or display the API key value.
+### Restart VS Code
 
-## Privacy and security
+After setting user-level environment variables:
+
+1. Completely close VS Code.
+2. Reopen VS Code.
+3. Reopen the project.
+
+The VS Code extension host must start with the updated environment variables.
+
+### Verify NVIDIA Configuration
+
+1. Open the Command Palette.
+2. Press `Ctrl + Shift + P`.
+3. Run `Waymark: Show AI Configuration`.
+
+You should see configuration information such as:
+
+```text
+Provider: NVIDIA
+API key: Configured
+Model: configured
+```
+
+The actual API key is never displayed. If configuration is missing, check `NVIDIA_API_KEY`, `NVIDIA_MODEL`, and whether VS Code was restarted after setting them.
+
+### Try an AI Feature
+
+1. Open a source file.
+2. Select code.
+3. Right-click.
+4. Open the Waymark submenu.
+5. Choose `Waymark: Explain Selected Code`.
+
+You can also run `Waymark: Ask About Selected Code`.
+
+AI requests are explicitly user-triggered. Waymark does not make background NVIDIA requests. Automatic Guardian does not call NVIDIA.
+
+## AI Remediation
+
+Waymark uses a safe remediation workflow:
+
+```text
+Guardian finding
+-> user requests AI fix suggestion
+-> NVIDIA proposes a structured remediation
+-> Waymark presents the proposal
+-> user explicitly approves
+-> Waymark applies a targeted edit
+-> Guardian checks the affected file again
+```
+
+Waymark does not automatically modify files merely because an AI model suggested a fix.
+
+## Privacy
+
+| Feature | AI required | Sends code to NVIDIA |
+| --- | --- | --- |
+| Project Rules | No | No |
+| Project Decisions | No | No |
+| Project Memory | No | No |
+| Automatic Guardian | No | No |
+| Code Context | No | No |
+| Explain Selected Code | Yes | Selected/contextual code |
+| Ask About Selected Code | Yes | Selected/contextual code |
+| AI remediation proposal | Yes | Required remediation context |
+
+Guardian processing is local. When a user explicitly invokes an AI feature, selected/contextual code and relevant project evidence may be sent to the configured NVIDIA endpoint.
+
+## Using Waymark with Codex, Copilot, and Other AI Agents
+
+Project truth is stored in plain Markdown so AI coding agents can inspect it.
+
+Tell your agent to read:
+
+- `.waymark/constitution.md`
+- `.waymark/rules/`
+- `.waymark/decisions/`
+
+Copyable instruction:
+
+```text
+Before modifying this project:
+
+1. Read .waymark/constitution.md.
+2. Read all active rules under .waymark/rules/.
+3. Read relevant decisions under .waymark/decisions/.
+4. Respect those constraints before changing code.
+5. Do not introduce technologies, dependencies, or architectural patterns that violate active rules.
+6. Do not create or modify project rules unless explicitly instructed by the user.
+```
+
+Even if an AI agent misses a constraint, Waymark's deterministic Guardian independently checks the resulting changed code.
+
+## Code Context
+
+Waymark can prepare bounded context for selected code.
+
+Context may include:
+
+- selected code;
+- bounded surrounding code;
+- file metadata;
+- relevant Project Memory evidence;
+- bounded Git evidence.
+
+This context can be inspected before an explicit AI request.
+
+## Privacy and Security
 
 - Guardian checks are local and deterministic.
 - Automatic Guardian does not call NVIDIA.
 - Automatic Guardian does not upload source code.
-- AI requests happen only after an explicit user action.
-- AI requests send selected/contextual code and relevant project evidence to the configured NVIDIA endpoint.
+- AI requests happen only after explicit user action.
+- Explicit AI requests may send selected/contextual code to NVIDIA.
 - API keys are not persisted by Waymark.
 - API keys are never displayed by Waymark.
+- Waymark does not add telemetry.
+- Waymark does not add analytics.
 - Waymark does not perform repository-wide source indexing.
 - Waymark does not create an embeddings database.
+- Waymark does not use vector search.
+- Waymark does not use MCP.
 - Waymark does not perform Git mutations.
-- Waymark does not call a backend service.
-- AI remediation never automatically edits files.
-- Remediation requires explicit user approval before any edit is applied.
+- Guardian does not require a backend service.
+- AI remediation requires explicit user approval.
 
 ## Commands
 
-### Project setup
+Project setup:
 
 - `Waymark: Initialize Project`
 - `Waymark: Select Workspace Folder`
 - `Waymark: Create Constitution`
 - `Waymark: Open Constitution`
+- `Waymark: Migrate Legacy Project Memory`
 
-### Rules
+Rules:
 
 - `Waymark: Add Rule`
 - `Waymark: Delete Rule`
 - `Waymark: Import Architecture Document`
 
-### Decisions
+Decisions:
 
 - `Waymark: Add Decision`
 
-### Guardian
+Guardian:
 
 - `Waymark: Check Against Project Rules`
 - `Waymark: Check Current Changes`
 - `Waymark: Show Guardian Finding`
 
-### Project Memory and Git context
+Project Memory and Git:
 
 - `Waymark: Open Project Memory`
 - `Waymark: Search Project Memory`
@@ -198,7 +413,7 @@ Never paste an API key into source code. Never commit an API key to the reposito
 - `Waymark: View File Diff`
 - `Waymark: Show Commit Details`
 
-### Code Context and AI
+Code Context and AI:
 
 - `Waymark: Show Code Context`
 - `Waymark: Explain Selected Code`
@@ -209,7 +424,7 @@ Never paste an API key into source code. Never commit an API key to the reposito
 
 From the repository root:
 
-```bash
+```powershell
 corepack pnpm --filter ./apps/vscode-extension typecheck
 corepack pnpm --filter ./apps/vscode-extension lint
 corepack pnpm --filter ./apps/vscode-extension test
@@ -217,53 +432,34 @@ corepack pnpm --filter ./apps/vscode-extension build
 corepack pnpm --filter ./apps/vscode-extension validate:manifest
 ```
 
-### F5 Extension Development Host
+To launch an Extension Development Host, open the repository in VS Code and press `F5`.
 
-1. Open this repository in VS Code.
-2. Press F5 or choose `Waymark: VS Code Extension Development Host` in the Run and Debug panel.
-3. VS Code runs the `Waymark: Build VS Code Extension` pre-launch task.
-4. A separate Extension Development Host window opens with Waymark loaded from `apps/vscode-extension`.
-5. In the development host, open a project and select the Waymark Activity Bar item.
+To package locally:
 
-### Local VSIX
-
-Build a fresh local VSIX from the repository root:
-
-```bash
+```powershell
 corepack pnpm --filter ./apps/vscode-extension package:vsix
 ```
 
-Install it through the VS Code UI:
+To install the local VSIX manually:
 
-1. Open VS Code.
-2. Open Extensions.
-3. Select `...`.
-4. Select `Install from VSIX...`.
-5. Choose the generated Waymark `.vsix`.
-6. Reload VS Code if prompted.
-7. Open a project.
-8. Open the Waymark Activity Bar.
-
-CLI alternative:
-
-```bash
-code --install-extension apps/vscode-extension/<generated-waymark-vsix-file>.vsix
+```powershell
+code --install-extension apps/vscode-extension/waymark-0.1.2.vsix --force
 ```
-
-F5 runs Waymark in a temporary Extension Development Host window. A VSIX installs Waymark into the normal VS Code environment.
 
 ## Limitations
 
+- Automatic Guardian currently watches Java, TypeScript/TSX, JavaScript/JSX, Python, C#, C/C++ headers and source, XML, YAML, JSON, and properties files. Other file types, including Solidity, are not automatically checked.
 - Guardian checks are deliberately conservative and pattern-based.
-- Guardian reports potential conflicts; it does not prove code is correct.
-- Automatic Guardian checks relevant changed files only; it does not perform full repository analysis.
-- Project Memory is deterministic lexical retrieval, not semantic search.
-- Waymark does not use embeddings or vector search.
-- Waymark does not include MCP integration.
-- AI features require user-triggered NVIDIA requests.
-- AI responses may use general programming knowledge, but project-specific claims should be grounded in supplied Waymark evidence.
-- The local project-memory directory is currently named `.trail/` for compatibility with the existing storage format.
+- Guardian reports potential conflicts; it does not prove code correctness.
+- Automatic Guardian checks relevant changed files rather than performing full repository analysis.
+- Project Memory uses deterministic lexical retrieval.
+- No embeddings or vector search.
+- No MCP.
+- AI responses depend on the configured NVIDIA model.
+- AI requires the user's own NVIDIA configuration.
+- Existing `.trail/` projects are supported for legacy compatibility.
+- Migration to `.waymark/` requires explicit user approval.
 
 ## License
 
-Waymark is licensed under the MIT License. See `LICENSE` for details.
+Waymark is licensed under the MIT License. See the repository `LICENSE` file.

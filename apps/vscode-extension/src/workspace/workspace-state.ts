@@ -1,4 +1,10 @@
 import { UserFacingError } from "../shared/errors";
+import {
+  migrateLegacyProjectMemoryToCanonical,
+  resolveProjectMemoryPaths,
+  type ProjectMemoryDirectoryFormat,
+  type ProjectMemoryMigrationResult
+} from "./project-memory-paths";
 
 import type { ProjectMarkerReadResult, ProjectMarkerStore, WaymarkProject, WorkspaceFolderInfo } from "./project-marker";
 
@@ -14,17 +20,23 @@ export type WaymarkWorkspaceState =
       readonly kind: "notInitialized";
       readonly folder: WorkspaceFolderInfo;
       readonly markerPath: string;
+      readonly projectMemoryDirectoryPath: string;
+      readonly projectMemoryDirectoryFormat: ProjectMemoryDirectoryFormat;
     }
   | {
       readonly kind: "initialized";
       readonly folder: WorkspaceFolderInfo;
       readonly markerPath: string;
+      readonly projectMemoryDirectoryPath: string;
+      readonly projectMemoryDirectoryFormat: ProjectMemoryDirectoryFormat;
       readonly project: WaymarkProject;
     }
   | {
       readonly kind: "malformedProject";
       readonly folder: WorkspaceFolderInfo;
       readonly markerPath: string;
+      readonly projectMemoryDirectoryPath: string;
+      readonly projectMemoryDirectoryFormat: ProjectMemoryDirectoryFormat;
       readonly reason: string;
     };
 
@@ -72,8 +84,26 @@ export class WaymarkWorkspaceService {
       kind: "initialized",
       folder: selectedFolder,
       markerPath: this.markerStore.markerPath(selectedFolder),
+      projectMemoryDirectoryPath: resolveProjectMemoryPaths(selectedFolder).projectMemoryDirectoryPath,
+      projectMemoryDirectoryFormat: resolveProjectMemoryPaths(selectedFolder).directoryFormat,
       project
     };
+  }
+
+  public async migrateLegacyProjectMemory(
+    workspaceFolders: readonly WorkspaceFolderInfo[],
+    selectedFolderPath?: string
+  ): Promise<ProjectMemoryMigrationResult> {
+    const selectedFolder = selectWorkspaceFolder(workspaceFolders, selectedFolderPath);
+    if (selectedFolder === "none") {
+      throw new UserFacingError("Open a workspace before migrating Waymark project memory.");
+    }
+
+    if (selectedFolder === "selectionRequired") {
+      throw new UserFacingError("Select a workspace folder before migrating Waymark project memory.");
+    }
+
+    return migrateLegacyProjectMemoryToCanonical(selectedFolder);
   }
 }
 
@@ -98,18 +128,23 @@ function selectWorkspaceFolder(
 }
 
 function toWorkspaceState(folder: WorkspaceFolderInfo, result: ProjectMarkerReadResult): WaymarkWorkspaceState {
+  const paths = resolveProjectMemoryPaths(folder);
   switch (result.status) {
     case "missing":
       return {
         kind: "notInitialized",
         folder,
-        markerPath: result.markerPath
+        markerPath: result.markerPath,
+        projectMemoryDirectoryPath: paths.projectMemoryDirectoryPath,
+        projectMemoryDirectoryFormat: paths.directoryFormat
       };
     case "valid":
       return {
         kind: "initialized",
         folder,
         markerPath: result.markerPath,
+        projectMemoryDirectoryPath: paths.projectMemoryDirectoryPath,
+        projectMemoryDirectoryFormat: paths.directoryFormat,
         project: result.project
       };
     case "malformed":
@@ -117,6 +152,8 @@ function toWorkspaceState(folder: WorkspaceFolderInfo, result: ProjectMarkerRead
         kind: "malformedProject",
         folder,
         markerPath: result.markerPath,
+        projectMemoryDirectoryPath: paths.projectMemoryDirectoryPath,
+        projectMemoryDirectoryFormat: paths.directoryFormat,
         reason: result.reason
       };
   }

@@ -2,7 +2,7 @@ import { constants } from "node:fs";
 import { access, mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
 
-import { resolveWaymarkWorkspacePaths } from "../workspace/trail-paths";
+import { resolveProjectMemoryPaths } from "../workspace/project-memory-paths";
 
 import type { WorkspaceFolderInfo } from "../workspace/project-marker";
 
@@ -19,7 +19,7 @@ export type ConstitutionState =
 
 export class ConstitutionStore {
   public async read(workspaceFolder: WorkspaceFolderInfo): Promise<ConstitutionState> {
-    const constitutionPath = resolveWaymarkWorkspacePaths(workspaceFolder).constitutionPath;
+    const constitutionPath = resolveProjectMemoryPaths(workspaceFolder).constitutionPath;
     if (!(await pathExists(constitutionPath))) {
       return {
         status: "missing",
@@ -36,7 +36,7 @@ export class ConstitutionStore {
   }
 
   public async create(workspaceFolder: WorkspaceFolderInfo): Promise<ConstitutionState> {
-    const constitutionPath = resolveWaymarkWorkspacePaths(workspaceFolder).constitutionPath;
+    const constitutionPath = resolveProjectMemoryPaths(workspaceFolder).constitutionPath;
     if (await pathExists(constitutionPath)) {
       return this.read(workspaceFolder);
     }
@@ -99,7 +99,7 @@ Describe what this project exists to do.
 
 ## Explicit Rules
 
-<!-- Approved project rules are defined in .trail/rules/. -->
+<!-- Approved project rules are defined in .waymark/rules/. -->
 
 ## Notes
 

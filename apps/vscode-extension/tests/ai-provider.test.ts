@@ -94,6 +94,8 @@ describe("NvidiaAiProvider", () => {
   it.each([
     [401, "AUTHENTICATION_FAILED"],
     [403, "FORBIDDEN"],
+    [404, "MODEL_UNAVAILABLE"],
+    [410, "MODEL_UNAVAILABLE"],
     [429, "RATE_LIMITED"],
     [503, "UNAVAILABLE"]
   ] as const)("classifies HTTP %s", async (status, code) => {
@@ -106,6 +108,14 @@ describe("NvidiaAiProvider", () => {
     await expect(provider({}, new FakeTransport([new Error("network down")])).generateText(request())).rejects.toMatchObject({
       code: "NETWORK"
     });
+  });
+
+  it.each([404, 410])("does not retry unavailable model response %s", async (status) => {
+    const transport = new FakeTransport([jsonResponse(status, {})]);
+    const delay = new FakeDelayScheduler();
+    await expect(provider({ maxRetries: 2 }, transport, delay).generateText(request())).rejects.toMatchObject({code: "MODEL_UNAVAILABLE"});
+    expect(transport.requests).toHaveLength(1);
+    expect(delay.delays).toEqual([]);
   });
 
   it("classifies timeout", async () => {
