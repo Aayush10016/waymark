@@ -7,6 +7,7 @@ export class ProjectMemoryRepository {
   private readonly collector: ProjectMemoryCollector;
   private readonly retriever: DeterministicMemoryRetriever;
   private index: ProjectMemoryIndex | undefined;
+  private workspaceKey: string | undefined;
 
   public constructor(collector: ProjectMemoryCollector, retriever: DeterministicMemoryRetriever) {
     this.collector = collector;
@@ -15,10 +16,12 @@ export class ProjectMemoryRepository {
 
   public clear(): void {
     this.index = undefined;
+    this.workspaceKey = undefined;
   }
 
   public async refresh(workspaceFolders: readonly WorkspaceFolderInfo[]): Promise<ProjectMemoryIndex> {
     this.index = await this.collector.collect(workspaceFolders);
+    this.workspaceKey = JSON.stringify(workspaceFolders.map(folder => folder.fsPath).sort());
     return this.index;
   }
 
@@ -26,7 +29,10 @@ export class ProjectMemoryRepository {
     query: string,
     workspaceFolders: readonly WorkspaceFolderInfo[]
   ): Promise<readonly ProjectMemorySearchResult[]> {
-    const index = this.index ?? (await this.refresh(workspaceFolders));
+    const key = JSON.stringify(workspaceFolders.map(folder => folder.fsPath).sort());
+    const index = this.index !== undefined && this.workspaceKey === key
+      ? this.index
+      : await this.refresh(workspaceFolders);
     return this.retriever.search(query, index.documents);
   }
 }

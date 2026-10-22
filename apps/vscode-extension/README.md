@@ -101,6 +101,14 @@ Rules are stored as Markdown under:
 .waymark/rules/
 ```
 
+### What Guardian can check
+
+Guardian recognizes specific deterministic patterns, including `Do not use Redis`, `Do not import lodash`, `Do not use dependency axios`, `Use PostgreSQL for persistent storage`, and `Authentication must go through AuthService`. PostgreSQL persistence checks flag known conflicting database references; the architectural-component pattern currently checks direct authentication implementation signals.
+
+Supported scopes are project-wide, backend, frontend, extension, vscode, java, typescript, javascript, and python. Backend/frontend scopes depend on matching workspace or directory names. Deprecated rules are ignored. Accepted decisions provide supporting evidence; decisions are not independently executable rules.
+
+Arbitrary prose rules are stored as project evidence but are not automatically enforceable. A clean result means no supported pattern matched, not that every project requirement was verified. The explicit Check Current Changes command examines Git path metadata; Automatic Guardian checks the contents of supported files when they change. Use Check Against Project Rules on selected code for a content check of an existing selection.
+
 ## Project Decisions
 
 Project decisions capture architectural choices and their rationale. They are stored as ADR-style Markdown files under:

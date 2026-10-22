@@ -4,6 +4,7 @@ import { basename, relative } from "node:path";
 import { DebouncedFileChangeQueue } from "./debounced-file-change-queue";
 import { isAutomaticGuardianRelevantPath } from "./file-relevance";
 import { AutomaticGuardianFindingState } from "./automatic-guardian-state";
+import { isProjectMemoryPath } from "../workspace/project-memory-paths";
 
 import type { AutomaticGuardianRunner } from "./automatic-guardian-runner";
 import type { GuardianFindingSink } from "./vscode-guardian-controller";
@@ -20,6 +21,7 @@ export class VsCodeAutomaticGuardian implements vscode.Disposable {
   private readonly disposables: vscode.Disposable[] = [];
   private readonly watcherDisposables: vscode.Disposable[] = [];
   private readonly findingState = new AutomaticGuardianFindingState();
+  private readonly trackedUris = new Map<string, vscode.Uri>();
   private readonly changeQueue: DebouncedFileChangeQueue<vscode.Uri>;
 
   public constructor(
@@ -70,6 +72,7 @@ export class VsCodeAutomaticGuardian implements vscode.Disposable {
       disposable.dispose();
     }
     this.findingState.clearAll();
+    this.trackedUris.clear();
   }
 
   public async recheckUri(uri: vscode.Uri): Promise<void> {
@@ -106,6 +109,12 @@ export class VsCodeAutomaticGuardian implements vscode.Disposable {
     }
 
     const file = this.fileInfoForUri(uri);
+    if (file !== undefined && isProjectMemoryPath(file.relativePath)) {
+      for (const trackedUri of this.trackedUris.values()) {
+        this.changeQueue.enqueue(trackedUri);
+      }
+      return;
+    }
     if (file === undefined || !isAutomaticGuardianRelevantPath(file.relativePath)) {
       return;
     }
@@ -114,12 +123,21 @@ export class VsCodeAutomaticGuardian implements vscode.Disposable {
   }
 
   private clearUri(uri: vscode.Uri): void {
+    const file = this.fileInfoForUri(uri);
+    if (file !== undefined && isProjectMemoryPath(file.relativePath)) {
+      this.enqueueUri(uri);
+      return;
+    }
+    this.trackedUris.delete(normalizeFilePath(uri.fsPath));
     this.diagnosticCollection.delete(uri);
     this.findingState.clearFile(normalizeFilePath(uri.fsPath));
     this.publishAllFindings();
   }
 
   private async checkUris(uris: readonly vscode.Uri[]): Promise<void> {
+    for (const uri of uris) {
+      this.trackedUris.set(normalizeFilePath(uri.fsPath), uri);
+    }
     const checks = uris.map((uri) => ({
       uri,
       fileKey: normalizeFilePath(uri.fsPath),

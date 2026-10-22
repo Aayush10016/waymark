@@ -8,6 +8,7 @@ export interface RemediationEditValidationFailure {
     | "UNRELATED_FILE"
     | "FILE_CHANGED"
     | "INVALID_LINE_RANGE"
+    | "OVERLAPPING_CHANGES"
     | "EXPECTED_TEXT_MISMATCH";
   readonly message: string;
 }
@@ -70,6 +71,15 @@ export function validateRemediationEdits(input: RemediationEditValidationInput):
     validated.push({ change });
   }
 
+  const ordered = [...input.changes].sort((left, right) => left.startLine - right.startLine);
+  for (let index = 1; index < ordered.length; index += 1) {
+    const previous = ordered[index - 1];
+    const current = ordered[index];
+    if (previous !== undefined && current !== undefined && current.startLine <= previous.endLine) {
+      return failure("OVERLAPPING_CHANGES", "Waymark refused overlapping remediation edits. Request a new proposal.");
+    }
+  }
+
   return {
     ok: true,
     changes: validated
@@ -88,7 +98,7 @@ export function applyRemediationChangesToText(content: string, changes: readonly
 
 export function lineRangeText(content: string, startLine: number, endLine: number): string | undefined {
   const lines = normalizeNewlines(content).split("\n");
-  if (startLine < 1 || endLine < startLine || endLine > lines.length) {
+  if (!Number.isSafeInteger(startLine) || !Number.isSafeInteger(endLine) || startLine < 1 || endLine < startLine || endLine > lines.length) {
     return undefined;
   }
   return lines.slice(startLine - 1, endLine).join("\n");

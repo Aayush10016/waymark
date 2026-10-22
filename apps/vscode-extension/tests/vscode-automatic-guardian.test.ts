@@ -105,6 +105,33 @@ vi.mock(
 );
 
 describe("VsCodeAutomaticGuardian", () => {
+  it.each([[".waymark","change"],[".trail","change"],[".waymark","delete"],[".trail","delete"]])("rechecks existing diagnostics on %s rule %s", async (directory,event) => {
+    vi.useFakeTimers();
+    const { VsCodeAutomaticGuardian } = await import("../src/guardian/vscode-automatic-guardian");
+    const uri=vscodeMock.createUri("/workspace/service.ts");
+    const diagnostics=fakeDiagnosticCollection();
+    const sink=new CapturingFindingSink();
+    const currentRunner=runner();
+    const guardian=new VsCodeAutomaticGuardian(currentRunner,sink,diagnostics as unknown as DiagnosticCollection);
+    try {
+      vscodeMock.textDocuments.splice(0,vscodeMock.textDocuments.length,document(uri,"RedisTemplate redisTemplate;"));
+      await invokeCheckUris(guardian,[uri]);
+      expect(sink.findings).toHaveLength(1);
+      vi.spyOn(currentRunner,"checkFiles").mockResolvedValue({fileResults:[],findings:[]});
+      const ruleUri=vscodeMock.createUri(`/workspace/${directory}/rules/no-redis.md`);
+      if (event === "delete") {
+        (guardian as unknown as {clearUri(uri:MockUri):void}).clearUri(ruleUri);
+      } else {
+        (guardian as unknown as {enqueueUri(uri:MockUri):void}).enqueueUri(ruleUri);
+      }
+      await vi.advanceTimersByTimeAsync(800);
+      expect(sink.findings).toEqual([]);
+      expect(diagnostics.activeUris()).toEqual([]);
+    } finally {
+      guardian.dispose();
+      vi.useRealTimers();
+    }
+  });
   it("clears sidebar findings and diagnostics when a file recheck returns no findings", async () => {
     const { VsCodeAutomaticGuardian } = await import("../src/guardian/vscode-automatic-guardian");
     const uri = vscodeMock.createUri("/workspace/backend/src/main/java/ArcadeScoreController.java");

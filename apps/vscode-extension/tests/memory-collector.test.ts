@@ -17,6 +17,16 @@ const tempRoots: string[] = [];
 describe("ProjectMemoryCollector", () => {
   afterEach(cleanup);
 
+  it("does not reuse cached evidence after switching workspace folders", async () => {
+    const first = await createWorkspace("first");
+    const second = await createWorkspace("second");
+    const repository = new ProjectMemoryRepository(new ProjectMemoryCollector(new FakeGitClient(), fixedNow), new DeterministicMemoryRetriever());
+    await repository.search("PostgreSQL", [first]);
+    const results = await repository.search("PostgreSQL", [second]);
+    expect(results.length).toBeGreaterThan(0);
+    expect(results.every(result => result.document.workspaceFolder.fsPath === second.fsPath)).toBe(true);
+  });
+
   it("collects project marker, constitution, rules, decisions, Git status, Git files, and recent commits", async () => {
     const workspace = await createWorkspace("backend");
     const collector = new ProjectMemoryCollector(new FakeGitClient(), fixedNow);

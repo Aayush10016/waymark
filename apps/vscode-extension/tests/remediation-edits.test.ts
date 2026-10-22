@@ -5,6 +5,31 @@ import { applyRemediationChangesToText, contentHash, validateRemediationEdits } 
 import type { RemediationChange } from "../src/ai/remediation-models";
 
 describe("validateRemediationEdits", () => {
+  it("rejects overlapping edits even when each original range matches", () => {
+    const filePath = "/workspace/file.ts";
+    const content = "first\nsecond\nthird";
+    const result = validateRemediationEdits({
+      intendedFilePath: filePath,
+      changes: [
+        change({filePath,startLine:1,endLine:2,expectedOriginalText:"first\nsecond"}),
+        change({filePath,startLine:2,endLine:3,expectedOriginalText:"second\nthird"})
+      ],
+      currentContentsByFilePath: new Map([[filePath,content]]),
+      expectedContentHashes: new Map([[filePath,contentHash(content)]])
+    });
+    expect(result).toMatchObject({ok:false,failure:{code:"OVERLAPPING_CHANGES"}});
+  });
+
+  it.each([1.5, Number.NaN, Number.POSITIVE_INFINITY])("rejects non-integral line range %s", startLine => {
+    const filePath = "/workspace/file.ts";
+    const content = "first\nsecond";
+    expect(validateRemediationEdits({
+      intendedFilePath:filePath,
+      changes:[change({filePath,startLine,endLine:2,expectedOriginalText:content})],
+      currentContentsByFilePath:new Map([[filePath,content]]),
+      expectedContentHashes:new Map([[filePath,contentHash(content)]])
+    })).toMatchObject({ok:false,failure:{code:"INVALID_LINE_RANGE"}});
+  });
   it("accepts a targeted edit when the current file still matches the proposal snapshot", () => {
     const filePath = "/workspace/backend/src/Foo.java";
     const content = "import org.springframework.data.redis.core.RedisTemplate;\nclass Foo {}";

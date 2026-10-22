@@ -12,6 +12,11 @@ export const PROJECT_MEMORY_WATCH_PATTERN = "{.waymark,.trail}/**";
 
 export type ProjectMemoryDirectoryFormat = "canonical" | "legacy";
 
+export function isProjectMemoryPath(relativePath: string): boolean {
+  const directory = relativePath.replace(/\\/g, "/").split("/")[0];
+  return directory === CANONICAL_PROJECT_MEMORY_DIRECTORY_NAME || directory === LEGACY_PROJECT_MEMORY_DIRECTORY_NAME;
+}
+
 export interface ProjectMemoryPaths {
   readonly directoryName: typeof CANONICAL_PROJECT_MEMORY_DIRECTORY_NAME | typeof LEGACY_PROJECT_MEMORY_DIRECTORY_NAME;
   readonly directoryFormat: ProjectMemoryDirectoryFormat;

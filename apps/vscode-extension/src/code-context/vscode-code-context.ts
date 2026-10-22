@@ -10,7 +10,6 @@ import type { SourceSelection, SourceSymbol } from "./models";
 export class VsCodeCodeContextController {
   private readonly packageBuilder: CodeContextPackageBuilder;
   private readonly outputChannel: vscode.OutputChannel;
-  private lastPackage: CodeContextPackage | undefined;
 
   public constructor(packageBuilder: CodeContextPackageBuilder, outputChannel: vscode.OutputChannel) {
     this.packageBuilder = packageBuilder;
@@ -19,14 +18,12 @@ export class VsCodeCodeContextController {
 
   public async explainSelectedCode(formatter: (contextPackage: CodeContextPackage) => string): Promise<void> {
     const contextPackage = await this.buildFromActiveSelection();
-    this.lastPackage = contextPackage;
     this.showPackage(contextPackage, formatter);
     await vscode.window.showInformationMessage("Local code context prepared. No AI was used.");
   }
 
   public async showCodeContext(formatter: (contextPackage: CodeContextPackage) => string): Promise<void> {
-    const contextPackage = this.lastPackage ?? (await this.buildFromActiveSelection());
-    this.lastPackage = contextPackage;
+    const contextPackage = await this.buildFromActiveSelection();
     this.showPackage(contextPackage, formatter);
   }
 
